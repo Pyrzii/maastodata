@@ -1,4 +1,3 @@
-[maastodata1.2.html](https://github.com/user-attachments/files/25606485/maastodata1.2.html)
 <!DOCTYPE html>
 <html lang="fi">
 <head>
