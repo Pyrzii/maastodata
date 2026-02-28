@@ -527,6 +527,15 @@ function calcVolume(species, d, h) {
   return v !== null ? Math.round(v * 10) / 10 : null; // dm³, 1 decimal
 }
 
+// Pohjapinta-ala yhdelle puulle (m²)
+// g = π * r² , r = d1.3/2 muutettuna cm → m (jaetaan 100)
+function calcBasalArea(d) {
+  d = parseFloat(d);
+  if (isNaN(d) || d <= 0) return null;
+  const r = (d / 2) / 100; // cm → m
+  return Math.PI * r * r;  // m²
+}
+
 function volDisplay(v) {
   if (v === null) return '<span class="vol-na">—</span>';
   return '<span class="vol-cell">'+v.toFixed(1)+' dm³</span>';
@@ -762,15 +771,17 @@ function renderInputTable(plot) {
   const el=document.getElementById('tree-table-input');
   if (!plot.trees.length){el.innerHTML='<div class="empty-table">Ei puita vielä. Täytä lomake yllä.</div>';return;}
   el.innerHTML=`<table>
-    <thead><tr><th>Puu #</th><th>Puulaji</th><th>d1.3 (cm)</th><th>h (m)</th><th>Tilavuus</th><th></th></tr></thead>
+    <thead><tr><th>Puu #</th><th>Puulaji</th><th>d1.3 (cm)</th><th>h (m)</th><th>Tilavuus</th><th>PPA (m²)</th><th></th></tr></thead>
     <tbody>${plot.trees.map(t=>{
       const v=calcVolume(t.species,t.dbh,t.height);
+      const ba=calcBasalArea(t.dbh);
       return `<tr>
         <td class="tree-num">${t.num}</td>
         <td><span class="species-pill">${t.species}</span></td>
         <td class="val-cell">${t.dbh??'—'}</td>
         <td class="val-cell">${t.height??'—'}</td>
         <td>${volDisplay(v)}</td>
+        <td style="font-family:'Inconsolata',monospace;font-size:12px;color:var(--green-mid)">${ba!==null?ba.toFixed(4):'—'}</td>
         <td><button class="btn-danger" onclick="deleteTree(${activePlotIdx},${t.num})">✕</button></td>
       </tr>`;}).join('')}</tbody></table>`;
 }
@@ -785,33 +796,37 @@ function renderReviewTable() {
 
   if (!plot.trees.length){el.innerHTML='<div class="empty-table">Ei puita tällä koealalla.</div>';volEl.textContent='';return;}
 
-  // Total volume
-  let totalVol=0, volCount=0;
-  plot.trees.forEach(t=>{ const v=calcVolume(t.species,t.dbh,t.height); if(v!==null){totalVol+=v;volCount++;} });
-  volEl.textContent = volCount>0 ? 'Yhteensä: '+totalVol.toFixed(1)+' dm³' : '';
+  // Total volume + total basal area
+  let totalVol=0, volCount=0, totalBa=0, baCount=0;
+  plot.trees.forEach(t=>{
+    const v=calcVolume(t.species,t.dbh,t.height); if(v!==null){totalVol+=v;volCount++;}
+    const ba=calcBasalArea(t.dbh); if(ba!==null){totalBa+=ba;baCount++;}
+  });
+  volEl.textContent = [
+    volCount>0?'Tilavuus: '+totalVol.toFixed(1)+' dm³':'',
+    baCount>0?'PPA: '+totalBa.toFixed(4)+' m²':''
+  ].filter(Boolean).join('  |  ');
 
   el.innerHTML=`<table>
     <thead><tr>
       <th>Puu #</th><th>Puulaji</th><th>d1.3 (cm)</th><th>h (m)</th>
-      <th>Tilavuus</th><th>Virhe-%</th><th>Muokkaa</th>
+      <th>Tilavuus</th><th>PPA (m²)</th><th>Muokkaa</th>
     </tr></thead>
     <tbody>${plot.trees.map(t=>{
       const v=calcVolume(t.species,t.dbh,t.height);
-      const errPct=t.species==='Mänty'?7.2:t.species==='Kuusi'?7.6:t.species==='Rauduskoivu'?8.5:null;
+      const ba=calcBasalArea(t.dbh);
       const isEditing=editingTree&&editingTree.plotIdx===activePlotIdx&&editingTree.treeNum===t.num;
       if (isEditing) {
         return `<tr style="background:var(--amber-pale)">
           <td class="tree-num">${t.num}</td>
           <td>
-            <div class="edit-row">
-              <select id="edit-species" class="field-species-edit" style="min-width:130px">
-                <option value="Mänty" ${t.species==='Mänty'?'selected':''}>Mänty</option>
-                <option value="Kuusi" ${t.species==='Kuusi'?'selected':''}>Kuusi</option>
-                <option value="Rauduskoivu" ${t.species==='Rauduskoivu'?'selected':''}>Rauduskoivu</option>
-                <option value="Muu havupuu" ${t.species==='Muu havupuu'?'selected':''}>Muu havupuu</option>
-                <option value="Muu lehtipuu" ${t.species==='Muu lehtipuu'?'selected':''}>Muu lehtipuu</option>
-              </select>
-            </div>
+            <select id="edit-species" style="min-width:130px;padding:6px 8px;font-size:13px">
+              <option value="Mänty" ${t.species==='Mänty'?'selected':''}>Mänty</option>
+              <option value="Kuusi" ${t.species==='Kuusi'?'selected':''}>Kuusi</option>
+              <option value="Rauduskoivu" ${t.species==='Rauduskoivu'?'selected':''}>Rauduskoivu</option>
+              <option value="Muu havupuu" ${t.species==='Muu havupuu'?'selected':''}>Muu havupuu</option>
+              <option value="Muu lehtipuu" ${t.species==='Muu lehtipuu'?'selected':''}>Muu lehtipuu</option>
+            </select>
           </td>
           <td><input type="number" id="edit-dbh" value="${t.dbh??''}" step="0.1" min="0" style="width:80px;padding:6px 8px;font-size:13px"></td>
           <td><input type="number" id="edit-height" value="${t.height??''}" step="0.1" min="0" style="width:80px;padding:6px 8px;font-size:13px"></td>
@@ -830,7 +845,7 @@ function renderReviewTable() {
         <td class="val-cell">${t.dbh??'—'}</td>
         <td class="val-cell">${t.height??'—'}</td>
         <td>${volDisplay(v)}</td>
-        <td style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted)">${errPct!==null?'±'+errPct+'%':'—'}</td>
+        <td style="font-family:'Inconsolata',monospace;font-size:12px;color:var(--green-mid)">${ba!==null?ba.toFixed(4):'—'}</td>
         <td>
           <div style="display:flex;gap:6px">
             <button class="btn-edit" onclick="startEdit(${activePlotIdx},${t.num})">✏️ Muokkaa</button>
@@ -861,8 +876,10 @@ function addTree() {
   document.getElementById('t-height').value='';
   document.getElementById('t-species').focus();
   const v=calcVolume(species,dbh,height);
-  const vStr=v!==null?' | v = '+v.toFixed(1)+' dm³':'';
-  showToast('🌲 Puu '+num+' — '+species+vStr);
+  const ba=calcBasalArea(dbh);
+  const vStr=v!==null?' | v='+v.toFixed(1)+'dm³':'';
+  const baStr=ba!==null?' | g='+ba.toFixed(4)+'m²':'';
+  showToast('🌲 Puu '+num+' — '+species+vStr+baStr);
 }
 
 function deleteTree(plotIdx,treeNum) {
@@ -956,9 +973,11 @@ function renderSummary() {
   const dbhs=allTrees.filter(t=>t.dbh).map(t=>parseFloat(t.dbh));
   const heights=allTrees.filter(t=>t.height).map(t=>parseFloat(t.height));
   const vols=allTrees.map(t=>calcVolume(t.species,t.dbh,t.height)).filter(v=>v!==null);
+  const bas=allTrees.map(t=>calcBasalArea(t.dbh)).filter(v=>v!==null);
   const avgDbh=dbhs.length?(dbhs.reduce((a,b)=>a+b,0)/dbhs.length).toFixed(1):'—';
   const avgH=heights.length?(heights.reduce((a,b)=>a+b,0)/heights.length).toFixed(1):'—';
   const totalVol=vols.length?vols.reduce((a,b)=>a+b,0).toFixed(1):'—';
+  const totalBa=bas.length?bas.reduce((a,b)=>a+b,0):'—';
   const speciesSet=[...new Set(allTrees.map(t=>t.species))];
   const totalPlots=allFigures.reduce((s,f)=>s+f.plots.length,0);
 
@@ -969,21 +988,22 @@ function renderSummary() {
     <div class="stat-box"><div class="stat-box-label">Keskim. d1.3</div><div class="stat-box-val">${avgDbh}</div><div class="stat-box-unit">cm</div></div>
     <div class="stat-box"><div class="stat-box-label">Keskim. h</div><div class="stat-box-val">${avgH}</div><div class="stat-box-unit">m</div></div>
     <div class="stat-box"><div class="stat-box-label">Kokonaistilavuus</div><div class="stat-box-val" style="font-size:22px">${totalVol}</div><div class="stat-box-unit">dm³</div></div>
+    <div class="stat-box"><div class="stat-box-label">Pohjapinta-ala yht.</div><div class="stat-box-val" style="font-size:22px">${typeof totalBa==='number'?totalBa.toFixed(4):'—'}</div><div class="stat-box-unit">m²</div></div>
     <div class="stat-box"><div class="stat-box-label">Puulajeja</div><div class="stat-box-val">${speciesSet.length}</div><div class="stat-box-unit">lajia</div></div>`;
 
   if (!allTrees.length){document.getElementById('full-table-content').innerHTML='<div class="empty-table">Ei puumittauksia.</div>';return;}
   document.getElementById('full-table-content').innerHTML=`<table>
-    <thead><tr><th>Kuvio</th><th>Koeala</th><th>Puu #</th><th>Puulaji</th><th>d1.3 (cm)</th><th>h (m)</th><th>Tilavuus (dm³)</th><th>Virhe-%</th></tr></thead>
+    <thead><tr><th>Kuvio</th><th>Koeala</th><th>Puu #</th><th>Puulaji</th><th>d1.3 (cm)</th><th>h (m)</th><th>Tilavuus (dm³)</th><th>PPA (m²)</th></tr></thead>
     <tbody>${allTrees.map(t=>{
       const v=calcVolume(t.species,t.dbh,t.height);
-      const errPct=t.species==='Mänty'?7.2:t.species==='Kuusi'?7.6:t.species==='Rauduskoivu'?8.5:null;
+      const ba=calcBasalArea(t.dbh);
       return `<tr>
         <td style="font-size:12px;color:var(--text-dim)">${t.figureName}</td>
         <td class="tree-num">${t.plotId}</td><td class="tree-num">${t.num}</td>
         <td><span class="species-pill">${t.species}</span></td>
         <td class="val-cell">${t.dbh??'—'}</td><td class="val-cell">${t.height??'—'}</td>
         <td>${volDisplay(v)}</td>
-        <td style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted)">${errPct!==null?'±'+errPct+'%':'—'}</td>
+        <td style="font-family:'Inconsolata',monospace;font-size:12px;color:var(--green-mid)">${ba!==null?ba.toFixed(4):'—'}</td>
       </tr>`;}).join('')}</tbody></table>`;
 }
 
@@ -1018,28 +1038,23 @@ function deleteSaved(idx){if(!confirm('Poistetaanko "'+savedFigures[idx].figure.
 
 // ═══════════════════════
 // CSV EXPORT — Metsätietostandardi
-// Kenttänimet: Suomen metsätietostandardin mukaiset
+// Ei koordinaattisarakkeita, ei virhemarginaalia
+// Lisätty: PohjapintaAlaG (m²)
 // ═══════════════════════
 function buildCSV(figure, plots) {
-  // Metsätietostandardi-kenttänimet
   const header = [
     'KuvioTunnus',        // Kuvion nimi/tunnus
-    'KuvioKoordinaattiN', // Kuvion pohjoinen koordinaatti (ETRS-TM35FIN tai WGS84 lat)
-    'KuvioKoordinaattiE', // Kuvion itäinen koordinaatti (lon)
     'KoealaNumero',       // Koealan järjestysnumero
-    'KoealaKoordinaattiN',// Koealan pohjoinen koordinaatti
-    'KoealaKoordinaattiE',// Koealan itäinen koordinaatti
     'PuuNumero',          // Puun järjestysnumero koealalla
     'Puulaji',            // Puulaji (suomenkielinen nimi)
     'PuulajiKoodi',       // VMI-puulajikoodi
     'LapimittaluokkaD13', // Rinnankorkeusläpimitta (cm)
     'PituusH',            // Puun pituus (m)
     'RunkotilavuusV',     // Laskennallinen runkotilavuus (dm³)
-    'TilavuusyhtaloVirhe',// Käytetyn tilavuusyhtälön keskivirhe (%)
+    'PohjapintaAlaG',     // Puun pohjapinta-ala π*r² (m²)
     'MittausPvm',         // Mittauspäivämäärä (ISO 8601)
   ];
 
-  // VMI-puulajikoodi (Valtakunnan metsien inventointi)
   const vmiCode = {
     'Mänty': '1', 'Kuusi': '2', 'Rauduskoivu': '3',
     'Muu havupuu': '9', 'Muu lehtipuu': '29'
@@ -1050,25 +1065,21 @@ function buildCSV(figure, plots) {
 
   plots.forEach(p => {
     if (!p.trees.length) {
-      rows.push([
-        figure.name, figure.lat??'', figure.lon??'',
-        p.id, p.lat??'', p.lon??'',
-        '','','','','','','', today
-      ]);
+      rows.push([figure.name, p.id, '', '', '', '', '', '', '', today]);
     } else {
       p.trees.forEach(t => {
-        const v = calcVolume(t.species, t.dbh, t.height);
-        const errPct = t.species==='Mänty'?7.2 : t.species==='Kuusi'?7.6 : t.species==='Rauduskoivu'?8.5 : '';
+        const v  = calcVolume(t.species, t.dbh, t.height);
+        const ba = calcBasalArea(t.dbh);
         rows.push([
-          figure.name, figure.lat??'', figure.lon??'',
-          p.id, p.lat??'', p.lon??'',
+          figure.name,
+          p.id,
           t.num,
           t.species,
           vmiCode[t.species] ?? '',
-          t.dbh ?? '',
+          t.dbh   ?? '',
           t.height ?? '',
-          v !== null ? v : '',
-          errPct,
+          v  !== null ? v.toFixed(1)  : '',
+          ba !== null ? ba.toFixed(6) : '',
           today
         ]);
       });
@@ -1082,21 +1093,20 @@ function exportCSV(silent){if(!state.figure){if(!silent)showToast('⚠️ Ei dat
 function exportCSVFromSaved(idx){const fig=savedFigures[idx];dl(buildCSV(fig.figure,fig.plots),'maastodata_'+fig.figure.name.replace(/\s+/g,'_')+'.csv','text/csv;charset=utf-8;');showToast('✅ CSV ladattu!');}
 function exportAllCSV(){
   if(!savedFigures.length&&!state.figure){showToast('⚠️ Ei tallennettuja kuvioita');return;}
-  // Build one big CSV combining all figures
   const vmiCode={'Mänty':'1','Kuusi':'2','Rauduskoivu':'3','Muu havupuu':'9','Muu lehtipuu':'29'};
   const today=new Date().toISOString().split('T')[0];
-  const header=['KuvioTunnus','KuvioKoordinaattiN','KuvioKoordinaattiE','KoealaNumero','KoealaKoordinaattiN','KoealaKoordinaattiE','PuuNumero','Puulaji','PuulajiKoodi','LapimittaluokkaD13','PituusH','RunkotilavuusV','TilavuusyhtaloVirhe','MittausPvm'];
+  const header=['KuvioTunnus','KoealaNumero','PuuNumero','Puulaji','PuulajiKoodi','LapimittaluokkaD13','PituusH','RunkotilavuusV','PohjapintaAlaG','MittausPvm'];
   const rows=[header];
   const allF=[];
   if(state.figure)allF.push({figure:state.figure,plots:state.plots});
   savedFigures.forEach(f=>allF.push(f));
   allF.forEach(({figure,plots})=>{
     plots.forEach(p=>{
-      if(!p.trees.length)rows.push([figure.name,figure.lat??'',figure.lon??'',p.id,p.lat??'',p.lon??'','','','','','','','',today]);
+      if(!p.trees.length)rows.push([figure.name,p.id,'','','','','','','',today]);
       else p.trees.forEach(t=>{
         const v=calcVolume(t.species,t.dbh,t.height);
-        const e=t.species==='Mänty'?7.2:t.species==='Kuusi'?7.6:t.species==='Rauduskoivu'?8.5:'';
-        rows.push([figure.name,figure.lat??'',figure.lon??'',p.id,p.lat??'',p.lon??'',t.num,t.species,vmiCode[t.species]??'',t.dbh??'',t.height??'',v!==null?v:'',e,today]);
+        const ba=calcBasalArea(t.dbh);
+        rows.push([figure.name,p.id,t.num,t.species,vmiCode[t.species]??'',t.dbh??'',t.height??'',v!==null?v.toFixed(1):'',ba!==null?ba.toFixed(6):'',today]);
       });
     });
   });
