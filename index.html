@@ -2,7 +2,7 @@
 <html lang="fi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MaastoData</title>
 <meta name="theme-color" content="#2e7d32">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -10,418 +10,305 @@
 <meta name="apple-mobile-web-app-title" content="MaastoData">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inconsolata:wght@400;500;600&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inconsolata:wght@400;600;700&family=Lato:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-:root {
-  --bg:#f4f8f4; --white:#fff; --surface2:#f0f7f0;
-  --border:#c8e0c8; --border-strong:#a0c8a0;
-  --green:#2e7d32; --green-mid:#43a047; --green-light:#81c784;
-  --green-pale:#e8f5e9; --green-pale2:#c8e6c9;
-  --red:#c62828; --red-pale:#ffebee;
-  --amber:#f57f17; --amber-pale:#fff8e1;
-  --blue:#1565c0; --blue-pale:#e3f2fd;
-  --text:#1a2e1a; --text-mid:#3a5a3a; --text-dim:#5a7a5a; --text-muted:#8aaa8a;
-  --shadow:0 2px 12px rgba(46,125,50,.10); --shadow-md:0 4px 20px rgba(46,125,50,.13);
+/* ── TOKENS ── */
+:root{
+  --bg:#f4f8f4; --white:#fff; --surface:#f0f7f0;
+  --border:#c8e0c8; --border-md:#a0c8a0;
+  --green:#2e7d32; --green-mid:#43a047; --green-lt:#81c784;
+  --green-pale:#e8f5e9; --green-pale2:#d0ebd0;
+  --amber:#f57c00; --amber-pale:#fff8e1;
+  --blue:#1565c0; --blue-pale:#e3f0fd;
+  --red:#c62828;
+  --text:#1a2e1a; --text-mid:#3a5a3a; --text-dim:#5a7a5a; --text-muted:#7a9a7a;
+  --shadow:0 1px 4px rgba(0,60,0,.08); --shadow-md:0 3px 12px rgba(0,60,0,.12);
+  --radius:10px;
 }
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-size:15px;min-height:100vh;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:'Lato',sans-serif;font-size:14px;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+input,select,button{font-family:inherit;font-size:inherit;}
+input[type=number]::-webkit-inner-spin-button{opacity:.6;}
 
-/* TOPBAR */
-.topbar{position:sticky;top:0;z-index:200;background:var(--green);color:white;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;box-shadow:0 2px 8px rgba(0,0,0,.15);}
-.logo{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:white;display:flex;align-items:center;gap:10px;}
-.topbar-info{font-family:'Inconsolata',monospace;font-size:12px;color:rgba(255,255,255,.75);display:flex;gap:20px;align-items:center;}
-.topbar-info strong{color:white;}
+/* ── TOPBAR ── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--green);height:52px;display:flex;align-items:center;gap:12px;padding:0 16px;box-shadow:0 2px 8px rgba(0,0,0,.18);}
+.logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:white;letter-spacing:-.3px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.topbar-info{flex:1;display:flex;gap:14px;align-items:center;font-size:12px;color:rgba(255,255,255,.8);font-family:'Inconsolata',monospace;overflow:hidden;}
+.topbar-info span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topbar-menu-btn{display:none;background:rgba(255,255,255,.15);border:none;color:white;border-radius:7px;padding:7px 10px;cursor:pointer;font-size:18px;-webkit-tap-highlight-color:transparent;}
 
-/* LAYOUT */
-.app{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 56px);}
+/* ── LAYOUT ── */
+.app-wrap{display:flex;padding-top:52px;min-height:100%;}
+.sidebar{width:220px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:16px 10px;position:fixed;top:52px;bottom:0;left:0;overflow-y:auto;z-index:100;}
+.main{flex:1;margin-left:220px;padding:24px 28px 40px;min-width:0;}
+.sidebar-label{font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);padding:10px 8px 6px;}
+.nav-btn{display:flex;align-items:center;gap:8px;width:100%;padding:10px;background:none;border:none;border-radius:8px;color:var(--text-mid);font-size:13px;font-weight:500;cursor:pointer;text-align:left;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent;}
+.nav-btn:hover{background:var(--green-pale);}
+.nav-btn.active{background:var(--green-pale2);color:var(--green);font-weight:700;}
+.nav-btn .icon{font-size:16px;flex-shrink:0;}
+.plot-list-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--text-dim);transition:background .1s;}
+.plot-list-item:hover{background:var(--green-pale);}
+.plot-list-item.active{background:var(--green-pale2);color:var(--green);font-weight:700;}
+.plot-list-num{font-family:'Inconsolata',monospace;font-size:11px;background:var(--surface);padding:2px 7px;border-radius:4px;}
+.plot-list-item.active .plot-list-num{background:var(--green);color:white;}
 
-/* SIDEBAR */
-.sidebar{background:var(--white);border-right:1px solid var(--border);padding:16px 0;overflow-y:auto;box-shadow:2px 0 8px rgba(0,0,0,.04);}
-.sidebar-label{font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);padding:10px 20px 5px;}
-.nav-btn{width:100%;text-align:left;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 20px;color:var(--text-dim);font-size:14px;font-family:'Lato',sans-serif;transition:all .15s;border-left:3px solid transparent;}
-.nav-btn:hover{background:var(--green-pale);color:var(--text);}
-.nav-btn.active{background:var(--green-pale);border-left-color:var(--green);color:var(--green);font-weight:700;}
-.nav-btn .icon{font-size:15px;width:20px;text-align:center;}
-.plot-list{padding:4px 12px;display:flex;flex-direction:column;gap:3px;}
-.plot-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:all .15s;}
-.plot-item:hover{background:var(--green-pale);}
-.plot-item.active{background:var(--green-pale2);border-color:var(--green-light);}
-.plot-item-left{display:flex;align-items:center;gap:8px;}
-.plot-num{font-family:'Inconsolata',monospace;font-size:11px;background:var(--surface2);color:var(--text-dim);padding:2px 7px;border-radius:4px;min-width:26px;text-align:center;font-weight:600;}
-.plot-item.active .plot-num{background:var(--green);color:white;}
-.plot-name{font-size:13px;color:var(--text-mid);}
-.plot-item.active .plot-name{color:var(--green);font-weight:600;}
-.plot-tree-count{font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted);}
+/* ── VIEWS ── */
+.view{display:none;}.view.active{display:block;}
+.page-header{margin-bottom:22px;}
+.page-header h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.page-header p{font-size:13px;color:var(--text-dim);}
 
-/* MAIN */
-.main{padding:28px 36px;overflow-y:auto;background:var(--bg);}
-.view{display:none;}
-.view.active{display:block;animation:fadeUp .18s ease;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+/* ── CARDS ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);margin-bottom:16px;}
+.card:last-child{margin-bottom:0;}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text);margin-bottom:14px;}
 
-/* PAGE HEADER */
-.page-header{margin-bottom:24px;}
-.page-header h2{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--text);margin-bottom:4px;}
-.page-header p{color:var(--text-dim);font-size:13px;}
+/* ── FORMS ── */
+label{display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px;}
+input[type=text],input[type=number],select{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:7px;background:var(--white);color:var(--text);transition:border-color .15s,box-shadow .15s;outline:none;}
+input:focus,select:focus{border-color:var(--green-mid);box-shadow:0 0 0 3px rgba(67,160,71,.15);}
+.field{margin-bottom:12px;}.field:last-child{margin-bottom:0;}
+.field-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+.field-row .field{flex:1;min-width:120px;margin-bottom:0;}
 
-/* CARD */
-.card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:22px 24px;margin-bottom:18px;box-shadow:var(--shadow);}
-.card-title{font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;font-weight:600;}
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s;-webkit-tap-highlight-color:transparent;white-space:nowrap;}
+.btn-primary{background:var(--green);color:white;}.btn-primary:hover{background:#256427;}
+.btn-success{background:#388e3c;color:white;}.btn-success:hover{background:#2e7d32;}
+.btn-outline{background:white;color:var(--green);border:1.5px solid var(--green-lt);}.btn-outline:hover{background:var(--green-pale);}
+.btn-ghost{background:var(--surface);color:var(--text-mid);border:1px solid var(--border);}.btn-ghost:hover{background:#e0ece0;}
+.btn-danger{background:none;color:var(--red);border:none;padding:4px 8px;font-size:13px;cursor:pointer;border-radius:5px;}.btn-danger:hover{background:#fdecea;}
+.btn-gps{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:700;background:var(--blue-pale);color:var(--blue);border:1.5px solid #90caf9;cursor:pointer;white-space:nowrap;transition:background .15s;}.btn-gps:hover{background:#c8e0fb;}
+button:disabled{opacity:.4;cursor:not-allowed;}
 
-/* FORM */
-.field-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
-.field-row:last-child{margin-bottom:0;}
-.field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px;}
-.field label{font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);font-weight:600;}
-input[type=text],input[type=number],select{background:var(--white);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Lato',sans-serif;font-size:14px;width:100%;outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;}
-input:focus,select:focus{border-color:var(--green-mid);box-shadow:0 0 0 3px rgba(67,160,71,.1);}
-input::placeholder{color:var(--text-muted);}
-select option{background:white;color:var(--text);}
+/* ── GPS ── */
+.gps-row{display:flex;gap:8px;align-items:center;}.gps-row input{flex:1;}
+.gps-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);margin-top:5px;}
+.gps-dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;transition:background .3s;}
+.gps-dot.active{background:#43a047;box-shadow:0 0 0 3px rgba(67,160,71,.2);}
+.gps-dot.loading{background:var(--amber);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* BUTTONS */
-.btn-primary{background:var(--green);color:white;border:none;border-radius:8px;padding:10px 22px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;}
-.btn-primary:hover{background:var(--green-mid);box-shadow:var(--shadow-md);transform:translateY(-1px);}
-.btn-outline{background:white;color:var(--green);border:1.5px solid var(--green-light);border-radius:8px;padding:9px 18px;font-family:'Lato',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
-.btn-outline:hover{background:var(--green-pale);}
-.btn-ghost{background:white;color:var(--text-dim);border:1.5px solid var(--border);border-radius:8px;padding:9px 18px;font-size:13px;cursor:pointer;transition:all .15s;}
-.btn-ghost:hover{border-color:var(--border-strong);color:var(--text);}
-.btn-danger{background:white;color:var(--red);border:1px solid #f5c6c6;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;transition:all .15s;}
-.btn-danger:hover{background:var(--red-pale);}
-.btn-success{background:#1b5e20;color:white;border:none;border-radius:8px;padding:11px 24px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px;}
-.btn-success:hover{background:var(--green);box-shadow:var(--shadow-md);transform:translateY(-1px);}
-.btn-edit{background:var(--blue-pale);color:var(--blue);border:1px solid #b3d4f5;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;transition:all .15s;}
-.btn-edit:hover{background:#c9e3fc;}
+/* ── MAP ── */
+.leaflet-map{height:260px;border-radius:8px;border:1px solid var(--border);margin-top:10px;z-index:1;}
 
-/* GPS */
-.gps-row{display:flex;gap:8px;align-items:stretch;}
-.gps-row input{flex:1;}
-.btn-gps{background:var(--green-pale);color:var(--green);border:1.5px solid var(--green-light);border-radius:8px;padding:0 14px;cursor:pointer;font-size:13px;font-family:'Lato',sans-serif;font-weight:500;white-space:nowrap;transition:all .15s;}
-.btn-gps:hover{background:var(--green-pale2);}
-.gps-status-label{font-size:12px;color:var(--text-muted);margin-top:4px;display:flex;align-items:center;gap:5px;}
-.gps-dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted);flex-shrink:0;}
-.gps-dot.ok{background:var(--green-mid);box-shadow:0 0 5px var(--green-light);}
-.gps-dot.loading{background:var(--amber);animation:blink2 .8s infinite;}
-@keyframes blink2{0%,100%{opacity:1}50%{opacity:.3}}
+/* ── BANNERS ── */
+.banner{padding:11px 14px;border-radius:8px;font-size:12px;line-height:1.6;margin-bottom:14px;}
+.banner-green{background:var(--green-pale);border:1px solid var(--green-lt);color:var(--text-mid);}
+.banner-blue{background:var(--blue-pale);border:1px solid #90caf9;color:#0d47a1;}
+.preview-pill{display:inline-block;background:var(--blue-pale);color:var(--blue);border:1px solid #90caf9;border-radius:6px;padding:6px 12px;font-size:12px;font-family:'Inconsolata',monospace;margin-top:8px;}
 
-/* MAP */
-#setup-map,#summary-map{border-radius:10px;border:1.5px solid var(--border);overflow:hidden;}
-#setup-map{height:240px;margin-top:14px;}
-#summary-map{height:340px;margin-bottom:18px;}
-#saved-map{height:300px;border-radius:10px;border:1.5px solid var(--border);margin-bottom:18px;overflow:hidden;}
+/* ── ACTIVE FIGURE ── */
+.active-fig-card{background:var(--green-pale);border:1.5px solid var(--green-lt);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;}
+.active-fig-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green);margin-bottom:4px;}
+.active-fig-meta{font-size:12px;color:var(--text-dim);font-family:'Inconsolata',monospace;}
 
-/* TREE FORM */
-.tree-form{background:var(--green-pale);border:1.5px solid var(--green-pale2);border-radius:12px;padding:18px 20px;margin-bottom:18px;}
-.tree-form-title{font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:12px;font-weight:600;}
-.tree-form-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
-.tree-form-row .field{min-width:90px;}
-.field-species{flex:2;min-width:150px;}
+/* ── PLOT HEADER ── */
+.plot-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;}
+.plot-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text);}
+.plot-sub{font-size:12px;color:var(--text-dim);margin-top:2px;}
+.plot-nav{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.plot-num-btn{min-width:34px;height:34px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);color:var(--text-dim);font-family:'Inconsolata',monospace;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;transition:all .12s;-webkit-tap-highlight-color:transparent;}
+.plot-num-btn:hover{background:var(--green-pale);border-color:var(--green-lt);}
+.plot-num-btn.current{background:var(--green);border-color:var(--green);color:white;}
+.plot-num-btn.has-data{border-color:var(--green-lt);color:var(--green);}
+.plot-num-btn.current.has-data{color:white;}
+.nav-arrow{height:34px;padding:0 10px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);color:var(--text-mid);font-size:16px;cursor:pointer;display:inline-flex;align-items:center;transition:background .12s;}
+.nav-arrow:hover{background:var(--green-pale);}
+.nav-dots{color:var(--text-muted);font-size:12px;padding:0 2px;line-height:34px;}
 
-/* TABLE */
-table{width:100%;border-collapse:collapse;}
-thead th{font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);background:var(--surface2);}
-tbody td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+/* ── TABS ── */
+.tab-bar{display:flex;gap:4px;flex-wrap:wrap;border-bottom:2px solid var(--border);margin-bottom:18px;}
+.tab-btn{padding:9px 16px;border-radius:8px 8px 0 0;border:none;background:none;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent;position:relative;bottom:-2px;}
+.tab-btn:hover{color:var(--text-mid);background:var(--green-pale);}
+.tab-btn.active{color:var(--green);background:var(--white);border:2px solid var(--border);border-bottom-color:var(--white);}
+
+/* ── STATS PANEL ── */
+.stats-panel{background:var(--green-pale);border:1px solid var(--green-lt);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;}
+.stats-panel-title{font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-weight:700;margin-bottom:8px;}
+.stats-meta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:12px;color:var(--text-dim);}
+.badge{display:inline-block;padding:2px 8px;border-radius:5px;font-family:'Inconsolata',monospace;font-size:10px;font-weight:700;}
+.badge-g{background:var(--green);color:white;}
+.badge-b{background:var(--blue);color:white;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;}
+.stat-tile{background:white;border:1px solid var(--border);border-radius:7px;padding:9px 12px;}
+.stat-tile-label{font-family:'Inconsolata',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:3px;}
+.stat-tile-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green);line-height:1.1;}
+.stat-tile-unit{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.stat-tile-ha{color:var(--blue);font-size:11px;font-weight:700;margin-top:1px;}
+
+/* ── TREE FORM ── */
+.tree-form{background:var(--surface);border:1.5px dashed var(--border-md);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;}
+.tree-form-title{font-family:'Inconsolata',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;font-weight:600;}
+.tree-form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.tree-form-row .field{flex:1;min-width:90px;margin-bottom:0;}
+.field-species{min-width:140px!important;}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:var(--surface);color:var(--text-dim);font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:700;padding:8px 12px;text-align:left;white-space:nowrap;border-bottom:2px solid var(--border);}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--surface);}
 tbody tr:last-child td{border-bottom:none;}
 tbody tr:hover td{background:var(--green-pale);}
-.tree-num{font-family:'Inconsolata',monospace;font-size:12px;color:var(--text-muted);font-weight:600;}
-.species-pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-family:'Inconsolata',monospace;background:var(--green-pale2);border:1px solid var(--green-light);color:var(--green);font-weight:600;}
-.val-cell{font-family:'Inconsolata',monospace;font-size:13px;color:var(--text-mid);}
+.val-cell{font-family:'Inconsolata',monospace;text-align:right;}
+.num-cell{font-family:'Inconsolata',monospace;font-size:12px;color:var(--text-muted);}
 .vol-cell{font-family:'Inconsolata',monospace;font-size:12px;color:var(--blue);font-weight:600;}
-.vol-na{color:var(--text-muted);font-size:11px;}
-.empty-table{padding:36px;text-align:center;color:var(--text-muted);font-size:13px;background:var(--surface2);}
+.vol-na{color:var(--text-muted);}
+.species-pill{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-size:12px;white-space:nowrap;}
+.empty-table{text-align:center;padding:28px;font-size:13px;color:var(--text-muted);}
+tfoot td{padding:9px 12px;font-weight:700;border-top:2px solid var(--border);background:var(--green-pale);}
 
-/* VOLUME INFO BOX */
-.vol-info{background:var(--blue-pale);border:1px solid #b3d4f5;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--blue);}
-.vol-info strong{font-weight:700;}
+/* ── FINISH BAR ── */
+.finish-bar{position:sticky;bottom:0;background:white;border-top:1px solid var(--border);box-shadow:0 -2px 12px rgba(0,0,0,.08);padding:12px 20px;margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-radius:0 0 var(--radius) var(--radius);}
+.finish-bar-info{font-size:13px;color:var(--text-dim);}
+.finish-bar-info strong{color:var(--text);}
 
-/* INLINE EDIT ROW */
-.edit-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-.edit-row input,.edit-row select{padding:6px 9px;font-size:12px;min-width:80px;flex:1;}
-.edit-row .field-species-edit{min-width:130px;flex:2;}
+/* ── SUMMARY ── */
+.summary-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;margin-top:16px;}
+.fig-list{display:flex;flex-direction:column;gap:8px;}
+.fig-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);padding:13px 16px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow);}
+.fig-card:hover{border-color:var(--green-lt);background:var(--green-pale);}
+.fig-card.sel{border-color:var(--green);background:var(--green-pale);}
+.fig-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;margin-bottom:6px;display:inline-block;}
+.badge-active{background:var(--amber-pale);color:var(--amber);border:1px solid #ffcc80;}
+.badge-saved{background:var(--green-pale2);color:var(--green);border:1px solid var(--green-lt);}
+.fig-card-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.fig-card.sel .fig-card-name{color:var(--green);}
+.fig-card-meta{font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted);display:flex;gap:10px;flex-wrap:wrap;}
+.detail-back{background:none;border:none;color:var(--green);cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;gap:4px;margin-bottom:12px;padding:0;}
+.detail-back:hover{text-decoration:underline;}
+.section-label{font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:8px;}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
+.stat-box{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:11px 14px;}
+.stat-box-label{font-family:'Inconsolata',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;}
+.stat-box-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--green);line-height:1.1;}
+.stat-box-unit{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.drill-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;transition:all .12s;}
+.drill-card:hover{background:var(--green-pale);border-color:var(--green-lt);}
+.drill-card.sel{background:var(--green-pale2);border-color:var(--green);}
+.drill-num{font-family:'Inconsolata',monospace;font-size:12px;background:var(--green);color:white;padding:3px 9px;border-radius:5px;font-weight:700;margin-right:10px;}
+.drill-stats{font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted);display:flex;gap:8px;margin-top:2px;}
 
-/* FINISH BAR */
-.finish-bar{background:white;border:2px solid var(--green-light);border-radius:12px;padding:18px 22px;margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;box-shadow:var(--shadow);}
-.finish-bar-info{font-size:14px;color:var(--text-mid);line-height:1.6;}
-.finish-bar-info strong{color:var(--green);font-size:15px;}
+/* ── SAVED ── */
+.saved-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow);}
+.saved-card-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.saved-card-meta{font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted);margin-bottom:10px;}
+.saved-actions{display:flex;gap:8px;flex-wrap:wrap;}
 
-/* PLOT HEADER */
-.plot-header-bar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
-.plot-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);}
-.plot-subtitle{font-size:13px;color:var(--text-dim);margin-top:3px;}
-
-/* TABS */
-.tab-bar{display:flex;gap:4px;margin-bottom:18px;background:var(--surface2);border-radius:10px;padding:4px;}
-.tab-btn{flex:1;padding:8px;border:none;background:none;border-radius:7px;cursor:pointer;font-family:'Lato',sans-serif;font-size:13px;font-weight:500;color:var(--text-dim);transition:all .15s;}
-.tab-btn.active{background:white;color:var(--green);font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.08);}
-
-/* STATS */
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
-.stat-box{background:white;border:1.5px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow);}
-.stat-box-label{font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;}
-.stat-box-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--green);line-height:1;}
-.stat-box-unit{font-size:12px;color:var(--text-dim);margin-top:3px;}
-
-.export-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
-
-/* SAVED */
-.saved-item{background:white;border:1.5px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow);flex-wrap:wrap;gap:10px;margin-bottom:10px;}
-.saved-item-info strong{color:var(--green);}
-.saved-item-meta{font-size:12px;color:var(--text-muted);font-family:'Inconsolata',monospace;margin-top:3px;}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
-.modal-overlay.open{opacity:1;pointer-events:all;}
-.modal{background:white;border-radius:16px;padding:28px 32px;max-width:440px;width:90%;box-shadow:0 16px 48px rgba(0,0,0,.2);transform:scale(.96);transition:transform .2s;}
-.modal-overlay.open .modal{transform:scale(1);}
-.modal h3{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text);margin-bottom:10px;}
-.modal p{font-size:14px;color:var(--text-dim);line-height:1.6;margin-bottom:20px;}
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:white;border-radius:14px;padding:28px 24px;max-width:440px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.22);}
+.modal h3{font-family:'Syne',sans-serif;font-size:18px;margin-bottom:10px;}
+.modal p{font-size:13px;color:var(--text-dim);margin-bottom:18px;line-height:1.6;}
 .modal-actions{display:flex;gap:10px;flex-wrap:wrap;}
 
-/* TOAST */
-.toast{position:fixed;bottom:28px;right:28px;z-index:999;background:var(--green);color:white;padding:12px 22px;border-radius:9px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;transform:translateY(70px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 6px 24px rgba(46,125,50,.3);pointer-events:none;}
-.toast.show{transform:translateY(0);opacity:1;}
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a2e1a;color:white;padding:11px 20px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all .25s;z-index:900;white-space:nowrap;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* ── BOTTOM NAV (mobile) ── */
-.bottom-nav{
-  display:none;
-  position:fixed;bottom:0;left:0;right:0;z-index:300;
-  background:var(--white);border-top:1px solid var(--border);
-  box-shadow:0 -2px 12px rgba(0,0,0,.08);
-  padding:0 0 env(safe-area-inset-bottom,0);
-}
-.bottom-nav-inner{display:flex;align-items:stretch;}
-.bnav-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;padding:8px 4px 6px;border:none;background:none;cursor:pointer;
-  color:var(--text-muted);font-size:10px;font-family:'Lato',sans-serif;font-weight:500;
-  transition:color .15s;min-height:56px;
-  -webkit-tap-highlight-color:transparent;
-}
-.bnav-btn .bicon{font-size:20px;line-height:1;}
-.bnav-btn.active{color:var(--green);font-weight:700;}
-.bnav-btn.active .bicon{filter:drop-shadow(0 0 3px rgba(46,125,50,.3));}
+/* ── BOTTOM NAV ── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);box-shadow:0 -2px 10px rgba(0,0,0,.08);z-index:300;padding-bottom:env(safe-area-inset-bottom,0px);}
+.bottom-nav-inner{display:flex;}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:none;background:none;color:var(--text-muted);font-size:10px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s;}
+.bnav-btn.active{color:var(--green);}
+.bicon{font-size:20px;line-height:1;}
 
-/* ── DRAWER (mobile plot selector) ── */
-.drawer-overlay{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;
-  opacity:0;transition:opacity .25s;
-}
-.drawer-overlay.open{opacity:1;}
-.drawer{
-  position:fixed;bottom:0;left:0;right:0;z-index:401;
-  background:var(--white);border-radius:20px 20px 0 0;
-  padding:0 0 env(safe-area-inset-bottom,8px);
-  transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.23,1);
-  max-height:80vh;display:flex;flex-direction:column;
-}
+/* ── DRAWER ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:400;opacity:0;transition:opacity .25s;}
+.drawer-overlay.open{display:block;opacity:1;}
+.drawer{position:fixed;bottom:0;left:0;right:0;z-index:410;background:white;border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.23,1);max-height:80vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,8px);}
 .drawer.open{transform:translateY(0);}
 .drawer-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 4px;}
-.drawer-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;padding:4px 20px 12px;color:var(--text);border-bottom:1px solid var(--border);}
+.drawer-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;padding:4px 20px 12px;border-bottom:1px solid var(--border);}
 .drawer-body{overflow-y:auto;padding:8px 12px 16px;flex:1;}
-.drawer-plot-item{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 14px;border-radius:10px;cursor:pointer;
-  border:1px solid transparent;transition:all .15s;margin-bottom:4px;
-  -webkit-tap-highlight-color:transparent;
-}
-.drawer-plot-item:hover,.drawer-plot-item:active{background:var(--green-pale);}
-.drawer-plot-item.active{background:var(--green-pale2);border-color:var(--green-light);}
-.drawer-plot-num{font-family:'Inconsolata',monospace;font-size:12px;background:var(--surface2);color:var(--text-dim);padding:3px 9px;border-radius:5px;min-width:30px;text-align:center;font-weight:600;}
-.drawer-plot-item.active .drawer-plot-num{background:var(--green);color:white;}
-.drawer-plot-name{font-size:14px;color:var(--text-mid);font-weight:500;}
-.drawer-plot-item.active .drawer-plot-name{color:var(--green);font-weight:700;}
-.drawer-plot-count{font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted);}
+.drawer-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:9px;cursor:pointer;border:1px solid transparent;margin-bottom:4px;-webkit-tap-highlight-color:transparent;transition:all .12s;}
+.drawer-item:hover,.drawer-item:active{background:var(--green-pale);}
+.drawer-item.active{background:var(--green-pale2);border-color:var(--green-lt);}
+.drawer-item-num{font-family:'Inconsolata',monospace;font-size:12px;background:var(--surface);color:var(--text-dim);padding:3px 9px;border-radius:5px;font-weight:600;}
+.drawer-item.active .drawer-item-num{background:var(--green);color:white;}
 
-/* ── MOBILE TOPBAR adjustments ── */
-.topbar-menu-btn{
-  display:none;background:rgba(255,255,255,.15);border:none;color:white;
-  border-radius:8px;padding:8px 10px;cursor:pointer;font-size:18px;
-  -webkit-tap-highlight-color:transparent;
-}
+/* ── EXPORT BAR ── */
+.export-bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
 
-@media(max-width:700px){
-  .app{grid-template-columns:1fr;}
-  .sidebar{display:none;}
-  .main{padding:16px 14px 80px;} /* bottom padding for nav bar */
-  .bottom-nav{display:block;}
-  .topbar-menu-btn{display:block;}
-  .topbar-info{font-size:11px;gap:10px;}
-
-  /* Tighter cards on mobile */
-  .card{padding:16px 14px;}
-  .tree-form{padding:14px 14px;}
-  .tree-form-row{gap:8px;}
-  .tree-form-row .field{min-width:80px;}
-
-  /* Stack plot nav buttons */
-  .plot-header-bar{flex-direction:column;gap:10px;align-items:stretch;}
-  .plot-header-bar>div:last-child{display:flex;gap:8px;}
-  .plot-header-bar>div:last-child button{flex:1;}
-
-  /* Table horizontal scroll */
-  .tree-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  table{min-width:400px;}
-
-  /* Finish bar stack */
-  .finish-bar{flex-direction:column;align-items:stretch;}
-  .finish-bar .btn-success{text-align:center;justify-content:center;}
-
-  /* Form fields full width on mobile */
-  .field-row{flex-direction:column;gap:10px;}
-  .field{min-width:unset;}
-
-  /* Map height on mobile */
-  #setup-map{height:200px;}
-  #summary-map{height:260px;}
-  #saved-map{height:220px;}
-
-  /* Toast above bottom nav */
-  .toast{bottom:72px;right:12px;left:12px;text-align:center;}
-
-  /* Install banner above bottom nav */
-  #install-banner{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 64px);}
-}
-/* PLOT STATS PANEL */
-.plot-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:10px;}
-.plot-stat{background:white;border-radius:8px;padding:10px 14px;border:1px solid var(--border);}
-.plot-stat-label{font-family:'Inconsolata',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;}
-.plot-stat-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--green);line-height:1.1;}
-.plot-stat-unit{font-size:11px;color:var(--text-dim);margin-top:2px;}
-.plot-stat.ha{border-color:var(--blue-pale);background:var(--blue-pale);}
-.plot-stat.ha .plot-stat-val{color:var(--blue);}
-.plot-koeala-info{font-size:12px;color:var(--text-dim);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;align-items:center;}
-.badge-green{background:var(--green);color:white;font-family:'Inconsolata',monospace;font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:1px;}
-.badge-blue{background:var(--blue);color:white;font-family:'Inconsolata',monospace;font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:1px;}
-
-/* SUMMARY TWO-PANE */
-.summary-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;}
-.summary-fig-list{display:flex;flex-direction:column;gap:8px;}
-.fig-card{
-  background:var(--white);border:1.5px solid var(--border);border-radius:10px;
-  padding:14px 16px;cursor:pointer;transition:all .15s;
-  box-shadow:var(--shadow);
-}
-.fig-card:hover{border-color:var(--green-light);background:var(--green-pale);}
-.fig-card.active{border-color:var(--green);background:var(--green-pale);box-shadow:var(--shadow-md);}
-.fig-card-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;}
-.fig-card.active .fig-card-name{color:var(--green);}
-.fig-card-meta{font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted);display:flex;gap:10px;flex-wrap:wrap;}
-.fig-card-status{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;margin-bottom:6px;}
-.fig-card-status.active-badge{background:var(--amber-pale);color:var(--amber);border:1px solid #ffe082;}
-.fig-card-status.saved-badge{background:var(--green-pale2);color:var(--green);border:1px solid var(--green-light);}
-
-/* DETAIL PANEL */
-.summary-detail{min-width:0;}
-.detail-section{margin-bottom:18px;}
-.detail-section-title{
-  font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:2px;
-  text-transform:uppercase;color:var(--text-muted);font-weight:600;
-  margin-bottom:10px;display:flex;align-items:center;gap:8px;
-}
-.detail-back-btn{
-  background:none;border:none;color:var(--green);cursor:pointer;
-  font-size:13px;font-family:'Lato',sans-serif;font-weight:600;
-  display:flex;align-items:center;gap:4px;padding:0;margin-bottom:12px;
-}
-.detail-back-btn:hover{text-decoration:underline;}
-
-/* Plot list in detail */
-.plot-detail-list{display:flex;flex-direction:column;gap:6px;}
-.plot-detail-card{
-  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
-  padding:10px 14px;cursor:pointer;transition:all .15s;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.plot-detail-card:hover{background:var(--green-pale);border-color:var(--green-light);}
-.plot-detail-card.active{background:var(--green-pale2);border-color:var(--green);}
-.plot-detail-left{display:flex;align-items:center;gap:10px;}
-.plot-detail-num{font-family:'Inconsolata',monospace;font-size:12px;background:var(--green);color:white;padding:3px 9px;border-radius:5px;font-weight:700;}
-.plot-detail-stats{font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted);display:flex;gap:8px;}
-
-/* Drill-down tree table */
-.drill-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-
+/* ── RESPONSIVE ── */
 @media(max-width:900px){
   .summary-layout{grid-template-columns:1fr;}
-  .summary-fig-list{flex-direction:row;overflow-x:auto;padding-bottom:4px;gap:8px;}
+  .fig-list{flex-direction:row;overflow-x:auto;padding-bottom:4px;gap:8px;}
   .fig-card{min-width:200px;flex-shrink:0;}
 }
-
-/* PLOT NUMBER BUTTONS */
-.plot-num-btn{
-  min-width:34px;height:34px;border-radius:7px;border:1.5px solid var(--border);
-  background:var(--white);color:var(--text-dim);font-family:'Inconsolata',monospace;
-  font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;
-  display:flex;align-items:center;justify-content:center;padding:0 8px;
+@media(max-width:700px){
+  .sidebar{display:none;}.main{margin-left:0;padding:16px 14px 90px;}
+  .bottom-nav{display:block;}.topbar-menu-btn{display:block;}
+  .leaflet-map{height:200px;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .stat-grid{grid-template-columns:repeat(2,1fr);}
+  .toast{bottom:80px;}
+  .finish-bar{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));}
 }
-.plot-num-btn:hover{background:var(--green-pale);border-color:var(--green-light);}
-.plot-num-btn.active{background:var(--green);border-color:var(--green);color:white;box-shadow:var(--shadow-md);}
-.plot-num-btn.has-trees{border-color:var(--green-light);color:var(--green);}
-.plot-num-btn.active.has-trees{color:white;}
-
-/* PRINT / PDF */
-@media print {
+@media print{
   .topbar,.sidebar,.bottom-nav,.drawer,.drawer-overlay,.tab-bar,
-  .finish-bar,.btn-primary,.btn-outline,.btn-ghost,.btn-success,
-  .btn-gps,.plot-header-bar,.export-bar,.vol-info,
-  .tree-form,#plot-stats-panel,.modal-overlay { display:none !important; }
-  .app{display:block!important;grid-template-columns:1fr!important;}
-  .main{padding:12px!important;}
-  body{background:white!important;font-size:11pt;}
-  .card{box-shadow:none!important;border:1px solid #ccc!important;break-inside:avoid;margin-bottom:8px;}
-  .view{display:block!important;}
-  .summary-layout{display:block!important;}
-  table{font-size:9pt;}
-  .print-only{display:block!important;}
-  .no-print{display:none!important;}
-  h2,h3{color:#000!important;}
+  .finish-bar,.btn,.btn-gps,.export-bar,.tree-form,.stats-panel,
+  .modal-overlay,.toast{display:none!important;}
+  .app-wrap{display:block!important;}.main{margin-left:0!important;padding:0!important;}
+  .view{display:block!important;}body{background:white!important;}
+  .card{box-shadow:none!important;break-inside:avoid;}
 }
-.print-only{display:none;}
-
 </style>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <header class="topbar">
   <div class="logo">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-      <polygon points="12,2 3,10 7,10 3,16 8,16 5,22 19,22 16,16 21,16 17,10 21,10" fill="white" opacity="0.95"/>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <polygon points="12,2 3,10 7,10 3,16 8,16 5,22 19,22 16,16 21,16 17,10 21,10" fill="white" opacity=".95"/>
     </svg>
     MaastoData
   </div>
   <div class="topbar-info">
-    <span id="tb-figure">Ei kuviota</span>
+    <span id="tb-fig">Ei kuviota</span>
     <span id="tb-trees" style="display:none"></span>
   </div>
-  <button class="topbar-menu-btn" onclick="openDrawer()" aria-label="Valikko">☰</button>
+  <button class="topbar-menu-btn" onclick="openDrawer()">☰</button>
 </header>
 
-<div class="app">
+<div class="app-wrap">
+
+  <!-- SIDEBAR -->
   <nav class="sidebar">
     <div class="sidebar-label">Näkymät</div>
-    <button class="nav-btn active" id="nb-setup" onclick="showView('setup',this)"><span class="icon">⚙️</span>Kuvion asetukset</button>
-    <button class="nav-btn" id="nb-summary" onclick="showView('summary',this)"><span class="icon">🗺️</span>Kartta &amp; yhteenveto</button>
-    <button class="nav-btn" id="nb-saved" onclick="showView('saved',this)"><span class="icon">💾</span>Tallennetut kuviot</button>
-    <div id="plot-sidebar-section" style="display:none">
-      <div class="sidebar-label" style="margin-top:12px">Koealat</div>
-      <div class="plot-list" id="plot-list"></div>
+    <button class="nav-btn active" id="nb-setup"   onclick="showView('setup')">  <span class="icon">⚙️</span>Kuvion asetukset</button>
+    <button class="nav-btn"        id="nb-summary" onclick="showView('summary')"><span class="icon">🗺️</span>Kartta &amp; yhteenveto</button>
+    <button class="nav-btn"        id="nb-saved"   onclick="showView('saved')">  <span class="icon">💾</span>Tallennetut kuviot</button>
+    <div id="sidebar-plots" style="display:none">
+      <div class="sidebar-label" style="margin-top:10px">Koealat</div>
+      <div id="sidebar-plot-list"></div>
     </div>
   </nav>
 
   <main class="main">
 
-    <!-- SETUP -->
+    <!-- ═══ SETUP ═══ -->
     <div class="view active" id="view-setup">
-      <div class="page-header"><h2>Kuvion asetukset</h2><p>Syötä kuvion tiedot ja merkitse sijainti kartalle.</p></div>
-      <div style="max-width:560px">
+      <div class="page-header"><h2>Kuvion asetukset</h2><p>Syötä uuden kuvion tiedot ja luo koealat.</p></div>
+      <div style="max-width:580px">
         <div class="card">
           <div class="card-title">🌲 Uusi kuvio</div>
           <div class="field-row">
-            <div class="field"><label>Kuvion nimi <span style="color:var(--green)">●</span></label><input type="text" id="fig-name" placeholder="esim. Kuvio 12A" maxlength="60"></div>
-            <div class="field" style="max-width:160px"><label>Koealoja <span style="color:var(--green)">●</span></label><input type="number" id="fig-plots" placeholder="esim. 5" min="1" max="200"></div>
+            <div class="field">
+              <label>Kuvion nimi <span style="color:var(--green)">●</span></label>
+              <input type="text" id="fig-name" placeholder="esim. Kuvio 12A" maxlength="60">
+            </div>
+            <div class="field" style="max-width:150px">
+              <label>Koealoja <span style="color:var(--green)">●</span></label>
+              <input type="number" id="fig-plots" placeholder="esim. 5" min="1" max="200">
+            </div>
           </div>
           <div class="field-row">
             <div class="field">
@@ -430,603 +317,455 @@ tbody tr:hover td{background:var(--green-pale);}
             </div>
             <div class="field">
               <label>Koealan muoto</label>
-              <select id="fig-plot-shape" onchange="updatePlotShapeInput()">
+              <select id="fig-shape" onchange="onShapeChange()">
                 <option value="">— Valitse —</option>
                 <option value="circle">Ympyräkoeala</option>
                 <option value="square">Neliökoeala</option>
-                <option value="relaskoop">Relaskooppikoeala</option>
               </select>
             </div>
-            <div class="field" id="fig-plot-size-field" style="display:none">
-              <label id="fig-plot-size-label">Säde (m)</label>
-              <input type="number" id="fig-plot-size" placeholder="esim. 5.64" step="0.01" min="0">
+            <div class="field" id="fig-size-wrap" style="display:none;max-width:150px">
+              <label id="fig-size-label">Säde r (m)</label>
+              <input type="number" id="fig-size" placeholder="esim. 5.64" step="0.01" min="0" oninput="updateAreaPreview()">
             </div>
           </div>
-          <div id="fig-plot-area-preview" style="display:none;font-family:'Inconsolata',monospace;font-size:12px;color:var(--blue);background:var(--blue-pale);border:1px solid #b3d4f5;border-radius:8px;padding:8px 12px;margin-top:2px"></div>
-          <div class="field" style="margin-top:10px">
+          <div id="area-preview" style="display:none" class="preview-pill"></div>
+          <div class="field" style="margin-top:12px">
             <label>Kuvion GPS-sijainti</label>
-            <div class="gps-row"><input type="text" id="fig-coords" placeholder="lat, lon — tai klikkaa kartalta"><button class="btn-gps" onclick="getGPSForFigure()">📡 Hae GPS</button></div>
-            <div class="gps-status-label"><div class="gps-dot" id="gpsDot"></div><span id="gpsLabel">GPS ei aktiivinen</span></div>
+            <div class="gps-row">
+              <input type="text" id="fig-coords" placeholder="lat, lon — tai klikkaa kartalta">
+              <button class="btn-gps" onclick="getGPS('fig')">📡 GPS</button>
+            </div>
+            <div class="gps-status"><div class="gps-dot" id="gps-dot"></div><span id="gps-label">GPS ei aktiivinen</span></div>
           </div>
-          <div id="setup-map"></div>
-          <p style="font-size:12px;color:var(--text-muted);margin-top:6px">💡 Klikkaa karttaa tai käytä GPS-nappia.</p>
-          <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-            <button class="btn-primary" onclick="createFigure()">Luo koealat →</button>
-            <button class="btn-ghost" onclick="resetCurrent()">Nollaa</button>
+          <div id="setup-map" class="leaflet-map"></div>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:6px">💡 Klikkaa karttaa tai käytä GPS-nappia.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+            <button class="btn btn-primary" onclick="createFigure()">Luo koealat →</button>
+            <button class="btn btn-ghost"   onclick="resetSetup()">Nollaa</button>
           </div>
         </div>
-        <div id="setup-current" style="display:none">
-          <div class="card" style="border-color:var(--green-light);background:var(--green-pale)">
-            <div class="card-title">✅ Aktiivinen kuvio</div>
-            <div id="setup-current-info" style="font-size:14px;color:var(--text-mid);line-height:1.8"></div>
-            <div style="margin-top:14px"><button class="btn-outline" onclick="showPlot(0)">Siirry koealalle 1 →</button></div>
+        <div id="active-fig-wrap" style="display:none">
+          <div class="active-fig-card">
+            <div style="font-size:11px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">✅ Aktiivinen kuvio</div>
+            <div class="active-fig-name" id="active-fig-name"></div>
+            <div class="active-fig-meta" id="active-fig-meta"></div>
+            <div style="margin-top:12px"><button class="btn btn-outline" onclick="showPlot(0)">Siirry koealalle 1 →</button></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- PLOT VIEW -->
+    <!-- ═══ PLOT ═══ -->
     <div class="view" id="view-plot">
-      <div class="plot-header-bar">
+      <div class="plot-header">
         <div>
-          <div class="plot-title" id="plot-view-title">Koeala 1</div>
-          <div class="plot-subtitle" id="plot-view-sub"></div>
+          <div class="plot-title" id="plot-title">Koeala 1</div>
+          <div class="plot-sub"   id="plot-sub"></div>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <button class="btn-ghost" onclick="prevPlot()" id="btn-prev-plot" style="padding:8px 12px">←</button>
-          <div id="plot-num-btns" style="display:flex;gap:4px;flex-wrap:wrap"></div>
-          <button class="btn-outline" onclick="nextPlot()" id="btn-next-plot" style="padding:8px 12px">→</button>
-        </div>
+        <div class="plot-nav" id="plot-nav"></div>
       </div>
 
-      <!-- TABS -->
       <div class="tab-bar">
-        <button class="tab-btn active" id="tab-input" onclick="switchTab('input')">➕ Syötä puita</button>
-        <button class="tab-btn" id="tab-review" onclick="switchTab('review')">🔍 Tarkastele &amp; muokkaa</button>
+        <button class="tab-btn active" id="tab-btn-input"  onclick="switchTab('input')"> ➕ Syötä puita</button>
+        <button class="tab-btn"        id="tab-btn-review" onclick="switchTab('review')">🔍 Tarkastele &amp; muokkaa</button>
       </div>
 
-      <!-- INPUT TAB -->
-      <div id="tab-content-input">
-        <div class="card" style="padding:14px 18px;margin-bottom:14px">
-          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-            <div style="flex:1;min-width:200px">
-              <div style="font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">Koealan GPS-sijainti</div>
-              <input type="text" id="plot-coords" placeholder="lat, lon — hae GPS tai syötä" style="font-size:13px">
+      <!-- TAB: INPUT -->
+      <div id="tab-input">
+        <div class="card" style="padding:13px 16px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="flex:1;min-width:180px">
+              <div style="font-family:'Inconsolata',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">Koealan GPS</div>
+              <input type="text" id="plot-coords" placeholder="lat, lon" style="font-size:13px">
             </div>
-            <button class="btn-gps" onclick="getGPSForPlot()" style="margin-top:18px">📡 Hae GPS</button>
+            <button class="btn-gps" onclick="getGPS('plot')" style="margin-top:16px">📡 GPS</button>
           </div>
         </div>
 
-        <!-- KOEALAN TIEDOT -paneeli -->
-        <div id="plot-stats-panel" class="card" style="padding:16px 18px;margin-bottom:14px;background:var(--green-pale);border-color:var(--green-light)"></div>
-        <!-- RELASKOOPPI PANEL — näytetään kun koealan muoto = relaskooppi -->
-        <div id="relaskoop-panel" style="display:none">
-          <div class="vol-info" style="background:var(--blue-pale);border-color:#b3d4f5;color:var(--blue)">
-            <strong>Relaskooppikoeala:</strong> Kierrä relaskooppi täysi 360°. Laske puulajeittain hahlon täyttävät puut. Jokainen puu = BAF m²/ha. Rajapuu = 0,5 kpl.
-          </div>
-          <div class="card" style="margin-bottom:14px">
-            <div class="card-title">⭕ Relaskooppikerroin ja puulaskelma</div>
-            <div class="field-row" style="margin-bottom:14px">
-              <div class="field" style="max-width:200px">
-                <label>Relaskooppikerroin (BAF)</label>
-                <select id="rela-baf">
-                  <option value="0.5">0,5</option>
-                  <option value="1" selected>1 (tavallinen)</option>
-                  <option value="2">2</option>
-                  <option value="4">4</option>
-                </select>
-              </div>
-            </div>
-            <div id="rela-species-inputs"></div>
-            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn-primary" onclick="calcRelaskoop()">Laske tulokset →</button>
-              <button class="btn-ghost" onclick="resetRelaskoop()">Nollaa</button>
-            </div>
-          </div>
-          <div id="rela-results" style="display:none">
-            <div class="card" style="background:var(--green-pale);border-color:var(--green-light);margin-bottom:14px">
-              <div class="card-title">📊 Relaskooppikoealan tulokset</div>
-              <div id="rela-results-content"></div>
-            </div>
-            <div class="card" style="margin-bottom:14px">
-              <div class="card-title">📏 Koepuu (valinnainen)</div>
-              <p style="font-size:13px;color:var(--text-dim);margin-bottom:12px">Mediaaniläpimittaa lähinnä vastaava puu.</p>
-              <div class="field-row">
-                <div class="field" style="max-width:160px"><label>Puulaji</label>
-                  <select id="rela-kp-species">
-                    <option value="">— Valitse —</option>
-                    <option value="Mänty">Mänty</option>
-                    <option value="Kuusi">Kuusi</option>
-                    <option value="Rauduskoivu">Rauduskoivu</option>
-                    <option value="Muu havupuu">Muu havupuu</option>
-                    <option value="Muu lehtipuu">Muu lehtipuu</option>
-                  </select>
-                </div>
-                <div class="field" style="max-width:120px"><label>d1.3 (cm)</label><input type="number" id="rela-kp-dbh" placeholder="esim. 18" step="0.1" min="0"></div>
-                <div class="field" style="max-width:120px"><label>h (m)</label><input type="number" id="rela-kp-h" placeholder="esim. 15" step="0.1" min="0"></div>
-                <div style="padding-bottom:1px"><button class="btn-outline" onclick="saveRelaKoepuu()">+ Tallenna</button></div>
-              </div>
-              <div id="rela-koepuu-list" style="margin-top:8px"></div>
-            </div>
-          </div>
-        </div>
+        <div class="stats-panel" id="stats-panel"></div>
 
-
-
-        <div id="normal-tree-entry">
         <div class="tree-form">
           <div class="tree-form-title">➕ Lisää puu — Enter tallentaa</div>
           <div class="tree-form-row">
-            <div class="field field-species"><label>Puulaji</label>
+            <div class="field field-species">
+              <label>Puulaji</label>
               <select id="t-species">
                 <option value="">— Valitse —</option>
-                <option value="Mänty">Mänty</option>
-                <option value="Kuusi">Kuusi</option>
-                <option value="Rauduskoivu">Rauduskoivu</option>
-                <option value="Muu havupuu">Muu havupuu</option>
-                <option value="Muu lehtipuu">Muu lehtipuu</option>
+                <option>Mänty</option><option>Kuusi</option><option>Rauduskoivu</option>
+                <option>Muu havupuu</option><option>Muu lehtipuu</option>
               </select>
             </div>
-            <div class="field"><label>d1.3 (cm)</label><input type="number" id="t-dbh" placeholder="esim. 18.5" step="0.1" min="0"></div>
-            <div class="field"><label>h (m)</label><input type="number" id="t-height" placeholder="esim. 14.2" step="0.1" min="0"></div>
-            <div style="padding-bottom:1px"><button class="btn-primary" onclick="addTree()">+ Lisää</button></div>
+            <div class="field"><label>d1.3 (cm)</label><input type="number" id="t-dbh"    placeholder="18.5" step="0.1" min="0"></div>
+            <div class="field"><label>h (m)</label>    <input type="number" id="t-height" placeholder="14.2" step="0.1" min="0"></div>
+            <div><button class="btn btn-primary" onclick="addTree()" style="margin-top:20px">+ Lisää</button></div>
           </div>
         </div>
 
         <div class="card" style="padding:0;overflow:hidden">
-          <div style="padding:14px 18px 0;display:flex;align-items:center;justify-content:space-between">
+          <div style="padding:13px 16px 0;display:flex;align-items:center;justify-content:space-between">
             <div class="card-title" style="margin-bottom:0">Puut — syöttönäkymä</div>
-            <span id="tree-count-label" style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted)"></span>
+            <span id="input-count" style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted)"></span>
           </div>
-          <div style="padding:8px 0 4px"><div id="tree-table-input"></div></div>
+          <div style="padding:6px 0 4px"><div class="table-wrap"><div id="input-table"></div></div></div>
         </div>
-        </div><!-- end normal-tree-entry -->
       </div>
 
-      <!-- REVIEW TAB -->
-      <div id="tab-content-review" style="display:none">
-        <div class="vol-info">
-          <strong>Tilavuuslaskenta:</strong> Männylle, kuuselle ja rauduskoivulle lasketaan runkotilavuus (dm³) Laasasenahon yhtälöillä.
-          Muille puulajeille tilavuutta ei lasketa. Laskenta vaatii sekä d1.3 että h.
+      <!-- TAB: REVIEW -->
+      <div id="tab-review" style="display:none">
+        <div class="banner banner-blue">
+          <strong>Tilavuuslaskenta:</strong> Männylle, kuuselle ja rauduskoivulle lasketaan runkotilavuus Laasasenahon yhtälöillä (dm³). Laskenta vaatii sekä d1.3 että h.
         </div>
         <div class="card" style="padding:0;overflow:hidden">
-          <div style="padding:14px 18px 0;display:flex;align-items:center;justify-content:space-between">
+          <div style="padding:13px 16px 0;display:flex;align-items:center;justify-content:space-between">
             <div class="card-title" style="margin-bottom:0">Puulista — tarkastelu &amp; muokkaus</div>
             <div style="display:flex;gap:8px;align-items:center">
-              <span id="review-vol-total" style="font-family:'Inconsolata',monospace;font-size:12px;color:var(--blue);font-weight:600"></span>
-              <span id="review-count-label" style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted)"></span>
+              <span id="review-totals" style="font-family:'Inconsolata',monospace;font-size:12px;color:var(--blue);font-weight:600"></span>
+              <span id="review-count"  style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted)"></span>
             </div>
           </div>
-          <div style="padding:8px 0 4px"><div id="tree-table-review"></div></div>
+          <div style="padding:6px 0 4px"><div class="table-wrap"><div id="review-table"></div></div></div>
         </div>
       </div>
 
-      <!-- FINISH BAR -->
       <div class="finish-bar">
         <div class="finish-bar-info">
           <strong>Valmis syöttämään?</strong><br>
-          <span id="finish-summary-text">Tallenna kuvio kun kaikki koealat on mitattu.</span>
+          <span id="finish-text">Tallenna kuvio kun kaikki koealat on mitattu.</span>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-success" onclick="openFinishModal()">💾 Lopeta ja tallenna</button>
-          <button class="btn-outline" onclick="exportPDF()">📄 PDF-raportti</button>
+          <button class="btn btn-success" onclick="openFinishModal()">💾 Lopeta ja tallenna</button>
+          <button class="btn btn-outline" onclick="exportPDF()">📄 PDF-raportti</button>
         </div>
       </div>
     </div>
 
-
-    <!-- SUMMARY -->
+    <!-- ═══ SUMMARY ═══ -->
     <div class="view" id="view-summary">
       <div class="page-header"><h2>Kartta &amp; yhteenveto</h2><p>Selaa kuvioita ja koealoja.</p></div>
-
-      <!-- MAP always visible -->
-      <div id="summary-map" style="margin-bottom:18px"></div>
-
-      <!-- Two-pane layout: figure list | detail panel -->
+      <div id="summary-map" class="leaflet-map" style="height:300px;margin-bottom:0"></div>
       <div class="summary-layout">
-
-        <!-- LEFT: Figure list -->
-        <div class="summary-fig-list" id="summary-fig-list"></div>
-
-        <!-- RIGHT: Detail panel -->
-        <div class="summary-detail" id="summary-detail">
-          <div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">
-            Valitse kuvio vasemmalta tarkastellaksesi tietoja.
-          </div>
-        </div>
-
+        <div class="fig-list" id="fig-list"></div>
+        <div id="summary-detail"><div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">Valitse kuvio listasta.</div></div>
       </div>
-
-      <!-- Global export -->
-      <div class="export-bar" style="margin-top:18px">
-        <button class="btn-primary" onclick="exportCSV(false)">⬇ Lataa aktiivinen CSV</button>
-        <button class="btn-outline" onclick="exportAllCSV()">⬇ Lataa kaikki CSV</button>
-        <button class="btn-ghost" onclick="exportJSON()">⬇ JSON</button>
+      <div class="export-bar">
+        <button class="btn btn-primary" onclick="exportCSV(false)">⬇ Lataa aktiivinen CSV</button>
+        <button class="btn btn-outline" onclick="exportAllCSV()">⬇ Lataa kaikki CSV</button>
+        <button class="btn btn-ghost"   onclick="exportJSON()">⬇ JSON</button>
       </div>
     </div>
 
-    <!-- SAVED -->
+    <!-- ═══ SAVED ═══ -->
     <div class="view" id="view-saved">
-      <div class="page-header"><h2>Tallennetut kuviot</h2><p>Kaikki lopetetut ja tallennetut kuviot.</p></div>
-      <div id="saved-map"></div>
-      <div class="export-bar"><button class="btn-primary" onclick="exportAllCSV()">⬇ Lataa kaikki CSV</button></div>
-      <div id="saved-list-content"></div>
+      <div class="page-header"><h2>Tallennetut kuviot</h2><p>Kaikki lopetetut kuviot.</p></div>
+      <div id="saved-map" class="leaflet-map" style="margin-bottom:16px"></div>
+      <div id="saved-list"></div>
     </div>
 
   </main>
-</div><!-- end .app -->
+</div>
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
-    <button class="bnav-btn active" id="bnav-setup" onclick="showView('setup',this);syncBnav('setup')" >
-      <span class="bicon">⚙️</span>Asetukset
-    </button>
-    <button class="bnav-btn" id="bnav-plot" onclick="openDrawer()">
-      <span class="bicon">📋</span>Koealat
-    </button>
-    <button class="bnav-btn" id="bnav-summary" onclick="showView('summary',this);syncBnav('summary')">
-      <span class="bicon">🗺️</span>Kartta
-    </button>
-    <button class="bnav-btn" id="bnav-saved" onclick="showView('saved',this);syncBnav('saved')">
-      <span class="bicon">💾</span>Tallennetut
-    </button>
+    <button class="bnav-btn active" id="bnav-setup"   onclick="showView('setup')">  <span class="bicon">⚙️</span>Asetukset</button>
+    <button class="bnav-btn"        id="bnav-plot"    onclick="openDrawer()">        <span class="bicon">📋</span>Koealat</button>
+    <button class="bnav-btn"        id="bnav-summary" onclick="showView('summary')"><span class="bicon">🗺️</span>Kartta</button>
+    <button class="bnav-btn"        id="bnav-saved"   onclick="showView('saved')">  <span class="bicon">💾</span>Tallennetut</button>
   </div>
 </nav>
 
-<!-- DRAWER: koealojen valinta mobiilissa -->
+<!-- DRAWER -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
   <div class="drawer-handle"></div>
-  <div class="drawer-title" id="drawer-title">Valitse koeala</div>
+  <div class="drawer-title">Valitse koeala</div>
   <div class="drawer-body" id="drawer-body"></div>
 </div>
+
+<!-- FINISH MODAL -->
 <div class="modal-overlay" id="finish-modal">
   <div class="modal">
     <h3>💾 Lopeta ja tallenna kuvio</h3>
-    <p id="modal-summary-text"></p>
+    <p id="finish-modal-text"></p>
     <div class="modal-actions">
-      <button class="btn-success" onclick="finishAndSave()">✅ Tallenna &amp; lataa CSV</button>
-      <button class="btn-ghost" onclick="closeModal()">Peruuta</button>
+      <button class="btn btn-success" onclick="finishAndSave()">✅ Tallenna &amp; lataa CSV</button>
+      <button class="btn btn-ghost"   onclick="closeModal()">Peruuta</button>
     </div>
-  </div>
-</div>
-
-<!-- PWA INSTALL BANNER -->
-<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:998;background:#1b5e20;color:white;padding:14px 20px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -4px 16px rgba(0,0,0,.2);">
-  <div style="display:flex;align-items:center;gap:12px;flex:1">
-    <span style="font-size:24px">🌲</span>
-    <div>
-      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:15px">Asenna MaastoData</div>
-      <div style="font-size:12px;opacity:.8;margin-top:2px">Lisää kotinäytölle — toimii myös offline</div>
-    </div>
-  </div>
-  <div style="display:flex;gap:8px;flex-shrink:0">
-    <button id="install-btn" style="background:white;color:#1b5e20;border:none;border-radius:8px;padding:9px 18px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;">Asenna</button>
-    <button id="install-dismiss" style="background:rgba(255,255,255,.15);color:white;border:none;border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;">✕</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<!-- ════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════ -->
 <script>
-// ═══════════════════════
-// VOLUME EQUATIONS
-// Laasasenaho (1982)
-// returns dm³, null if not calculable
-// ═══════════════════════
-function calcVolume(species, d, h) {
-  d = parseFloat(d); h = parseFloat(h);
-  if (isNaN(d) || isNaN(h) || d <= 0 || h <= 1.3) return null;
-  let v = null;
-  if (species === 'Mänty') {
-    v = 0.036089 * Math.pow(d, 2.01395) * Math.pow(0.99676, d) * Math.pow(h, 2.07025) * Math.pow(h - 1.3, -1.07209);
-  } else if (species === 'Kuusi') {
-    v = 0.022927 * Math.pow(d, 1.91505) * Math.pow(0.99146, d) * Math.pow(h, 2.82541) * Math.pow(h - 1.3, -1.53547);
-  } else if (species === 'Rauduskoivu') {
-    v = 0.011197 * Math.pow(d, 2.10253) * Math.pow(0.98600, d) * Math.pow(h, 3.98519) * Math.pow(h - 1.3, -2.65900);
-  }
-  return v !== null ? Math.round(v * 10) / 10 : null; // dm³, 1 decimal
-}
+'use strict';
 
-// Pohjapinta-ala yhdelle puulle (m²)
-// g = π * r² , r = d1.3/2 muutettuna cm → m (jaetaan 100)
-function calcBasalArea(d) {
-  d = parseFloat(d);
-  if (isNaN(d) || d <= 0) return null;
-  const r = (d / 2) / 100; // cm → m
-  return Math.PI * r * r;  // m²
-}
+// ── STATE ──────────────────────────────────────────────────────────────────
+const BLANK = () => ({ figure: null, plots: [] });
+let S    = JSON.parse(localStorage.getItem('md5')       || 'null') || BLANK();
+let SAVED = JSON.parse(localStorage.getItem('md5_saved') || '[]');
 
-function volDisplay(v) {
-  if (v === null) return '<span class="vol-na">—</span>';
-  return '<span class="vol-cell">'+v.toFixed(1)+' dm³</span>';
-}
-
-// PPA-painotettu keskiläpimitta (Dg) — metsätaloudessa käytetty standardi
-// Dg = sqrt( sumBa/n * 4/π ) * 100   →   vastaa qm mean diameter
-function calcDg(trees) {
-  const valid = trees.filter(t=>t.dbh&&parseFloat(t.dbh)>0);
-  if (!valid.length) return null;
-  const sumBa = valid.reduce((s,t)=>{ const ba=calcBasalArea(t.dbh); return ba!==null?s+ba:s; }, 0);
-  const n = valid.length;
-  if (!n || !sumBa) return null;
-  // Dg = 2 * sqrt(sumBa/(n*π))  [meters] → cm
-  return 2 * Math.sqrt(sumBa / (n * Math.PI)) * 100;
-}
-
-// ═══════════════════════
-// STATE
-// ═══════════════════════
-let state = JSON.parse(localStorage.getItem('md5') || 'null') || { figure:null, plots:[] };
-let savedFigures = JSON.parse(localStorage.getItem('md5_saved') || '[]');
-let activePlotIdx = 0;
+let plotIdx   = 0;
 let activeTab = 'input';
-let editingTree = null; // { plotIdx, treeNum }
+let editing   = null;   // { plotIdx, num }
+let selFig    = null;   // figObj for summary
+let selPlot   = null;   // plot for drilldown
+let toastTmr  = null;
+let mapSetup  = null, mapSummary = null, mapSaved = null, setupMarker = null;
 
-let setupMap=null, setupMarker=null, summaryMap=null, savedMap=null;
+const persist      = () => localStorage.setItem('md5',       JSON.stringify(S));
+const persistSaved = () => localStorage.setItem('md5_saved', JSON.stringify(SAVED));
 
-function persist() { localStorage.setItem('md5', JSON.stringify(state)); }
-function persistSaved() { localStorage.setItem('md5_saved', JSON.stringify(savedFigures)); }
+// ── MATHS ──────────────────────────────────────────────────────────────────
+function calcVolume(sp, d, h) {
+  if (!d || !h) return null;
+  d = +d; h = +h;
+  if (d <= 0 || h <= 0 || isNaN(d) || isNaN(h)) return null;
+  let v = null;
+  if (sp === 'Mänty')       v = 0.036089  * d**2.01653 * (d/(d-1.4))**0.99368  * h**2.07025  * (h-1.3)**-1.07209;
+  else if (sp === 'Kuusi')  v = 0.022927  * d**1.91505 * (d/(d-1.4))**1.14191  * h**2.82541  * (h-1.3)**-1.68611;
+  else if (sp === 'Rauduskoivu') v = 0.011197 * d**2.10253 * (d/(d-1.4))**0.74473 * h**3.98519 * (h-1.3)**-2.65900;
+  if (!v || isNaN(v) || v <= 0) return null;
+  return Math.round(v * 1000) / 1000;
+}
 
-// ═══════════════════════
-// NAV
-// ═══════════════════════
-function showView(name, el) {
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('view-'+name).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  if (el) el.classList.add('active');
-  syncBnav(name);
-  if (name==='summary') { renderSummary(); setTimeout(()=>{ initSummaryMap(); highlightSummaryMap(); },100); }
-  if (name==='saved')   { renderSaved();   setTimeout(initSavedMap,100); }
-  if (name==='setup')   { showSetupCurrent(); setTimeout(initSetupMap,100); }
+function calcBA(d) {
+  if (!d || +d <= 0) return null;
+  const r = +d / 200;
+  return Math.PI * r * r;
+}
+
+function calcDg(trees) {
+  const vld = trees.filter(t => t.dbh && +t.dbh > 0);
+  if (!vld.length) return null;
+  const sum = vld.reduce((s,t) => { const b = calcBA(t.dbh); return b ? s+b : s; }, 0);
+  return sum ? 2 * Math.sqrt(sum / (vld.length * Math.PI)) * 100 : null;
+}
+
+function sumBA(trees)  { return trees.reduce((s,t)=>{ const b=calcBA(t.dbh);  return b?s+b:s; }, 0); }
+function sumVol(trees) { const vs=trees.map(t=>calcVolume(t.species,t.dbh,t.height)).filter(v=>v!==null); return vs.length?vs.reduce((a,b)=>a+b,0):null; }
+function avgH(trees)   { const hs=trees.filter(t=>t.height&&+t.height>0).map(t=>+t.height); return hs.length?hs.reduce((a,b)=>a+b,0)/hs.length:null; }
+function volHTML(v)    { return v===null ? '<span class="vol-na">—</span>' : `<span class="vol-cell">${v.toFixed(1)} dm³</span>`; }
+
+// ── SHAPE HELPERS ──────────────────────────────────────────────────────────
+function pArea(shape, size)  { if(!shape||!size||+size<=0) return null; return shape==='circle'?Math.PI*(+size)**2:(+size)**2; }
+function pFactor(area)       { return area&&area>0 ? Math.ceil(10000/area) : null; }
+function shapeLabel(s)       { return s==='circle'?'Ympyräkoeala':s==='square'?'Neliökoeala':'—'; }
+function sizeLabel(s,z)      { if(!s||!z) return ''; return s==='circle'?`r = ${z} m`:`s = ${z} m`; }
+
+function onShapeChange() {
+  const s = document.getElementById('fig-shape').value;
+  const w = document.getElementById('fig-size-wrap');
+  const p = document.getElementById('area-preview');
+  if (!s) { w.style.display='none'; p.style.display='none'; return; }
+  w.style.display = 'flex';
+  document.getElementById('fig-size-label').textContent = s==='circle' ? 'Säde r (m)' : 'Sivu s (m)';
+  document.getElementById('fig-size').placeholder       = s==='circle' ? 'esim. 5.64' : 'esim. 10';
+  updateAreaPreview();
+}
+
+function updateAreaPreview() {
+  const s    = document.getElementById('fig-shape').value;
+  const z    = parseFloat(document.getElementById('fig-size').value);
+  const el   = document.getElementById('area-preview');
+  const area = pArea(s, z);
+  if (!area) { el.style.display='none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = `📐 Koealan ala: <strong>${area.toFixed(2)} m²</strong> &nbsp;·&nbsp; Koealakerroin: <strong>${pFactor(area)}</strong>`;
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+function showView(name) {
+  ['setup','plot','summary','saved'].forEach(v => {
+    document.getElementById(`view-${v}`).classList.toggle('active', v===name);
+    const nb = document.getElementById(`nb-${v}`);   if(nb)  nb.classList.toggle('active', v===name);
+    const bn = document.getElementById(`bnav-${v}`); if(bn)  bn.classList.toggle('active', v===name);
+  });
+  if (name==='summary') setTimeout(()=>{ initSummaryMap(); renderSummary(); highlightSummaryMap(); }, 80);
+  if (name==='saved')   setTimeout(()=>{ initSavedMap(); renderSaved(); }, 80);
 }
 
 function showPlot(idx) {
-  activePlotIdx=idx;
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('view-plot').classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.plot-item').forEach((el,i)=>el.classList.toggle('active',i===idx));
-  syncBnav('plot');
-  switchTab(activeTab);
+  plotIdx = idx;
+  showView('plot');
   renderPlotView();
+  closeDrawer();
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('bnav-plot')?.classList.add('active');
 }
 
-// ═══════════════════════
-// TABS
-// ═══════════════════════
-function switchTab(tab) {
-  activeTab = tab;
+function switchTab(name) {
+  activeTab = name;
   ['input','review'].forEach(t => {
-    const btn = document.getElementById('tab-'+t);
-    const contentEl = document.getElementById('tab-content-'+t);
-    if (btn) btn.classList.toggle('active', t===tab);
-    if (contentEl) contentEl.style.display = t===tab ? 'block' : 'none';
+    document.getElementById(`tab-btn-${t}`).classList.toggle('active', t===name);
+    document.getElementById(`tab-${t}`).style.display = t===name ? 'block' : 'none';
   });
-  if (tab==='review') renderReviewTable();
+  if (name==='review') renderReviewTable();
 }
 
-// ═══════════════════════
-// MAPS
-// ═══════════════════════
+// ── MAPS ───────────────────────────────────────────────────────────────────
 function initSetupMap() {
-  if (setupMap) { setupMap.invalidateSize(); return; }
-  setupMap = L.map('setup-map').setView([64.5,26.0],5);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(setupMap);
-  setupMap.on('click',function(e){
-    placeSetupMarker(e.latlng.lat,e.latlng.lng);
-    document.getElementById('fig-coords').value=e.latlng.lat.toFixed(6)+', '+e.latlng.lng.toFixed(6);
+  if (mapSetup) { mapSetup.invalidateSize(); return; }
+  mapSetup = L.map('setup-map').setView([64.5,26.0],5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(mapSetup);
+  mapSetup.on('click', e => {
+    placeSetupMarker(e.latlng.lat, e.latlng.lng);
+    document.getElementById('fig-coords').value = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
   });
-  if (state.figure&&state.figure.lat) { placeSetupMarker(state.figure.lat,state.figure.lon); setupMap.setView([state.figure.lat,state.figure.lon],13); }
+  if (S.figure?.lat) { placeSetupMarker(S.figure.lat, S.figure.lon); mapSetup.setView([S.figure.lat,S.figure.lon],13); }
 }
 
-function placeSetupMarker(lat,lon) {
-  if (setupMarker) setupMap.removeLayer(setupMarker);
-  setupMarker=L.marker([lat,lon],{icon:L.divIcon({className:'',html:'<div style="background:#2e7d32;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>',iconSize:[14,14],iconAnchor:[7,7]})}).addTo(setupMap);
+function placeSetupMarker(lat, lon) {
+  if (setupMarker) mapSetup.removeLayer(setupMarker);
+  setupMarker = L.marker([lat,lon]).addTo(mapSetup);
 }
 
 function initSummaryMap() {
-  if (!summaryMap) {
-    summaryMap=L.map('summary-map').setView([64.5,26.0],5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(summaryMap);
-  } else { summaryMap.invalidateSize(); }
+  if (mapSummary) { mapSummary.invalidateSize(); return; }
+  mapSummary = L.map('summary-map').setView([64.5,26.0],5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(mapSummary);
 }
 
 function initSavedMap() {
-  if (!savedMap) {
-    savedMap=L.map('saved-map').setView([64.5,26.0],5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(savedMap);
-  } else { savedMap.invalidateSize(); savedMap.eachLayer(l=>{ if(!(l instanceof L.TileLayer)) savedMap.removeLayer(l); }); }
-  const bounds=[];
-  const cols=['#2e7d32','#1565c0','#6a1b9a','#e65100','#c62828','#00695c'];
-  savedFigures.forEach((fig,fi)=>{
-    const col=cols[fi%cols.length];
-    if (fig.figure.lat) { addFigureMarker(savedMap,fig.figure.lat,fig.figure.lon,fig.figure.name,col); bounds.push([fig.figure.lat,fig.figure.lon]); }
-    fig.plots.forEach(p=>{ if(p.lat){ L.circleMarker([p.lat,p.lon],{radius:6,fillColor:col,color:'white',weight:2,fillOpacity:.9}).bindPopup('<strong>'+fig.figure.name+' — Koeala '+p.id+'</strong><br>'+p.trees.length+' puuta').addTo(savedMap); bounds.push([p.lat,p.lon]); }});
+  if (!mapSaved) {
+    mapSaved = L.map('saved-map').setView([64.5,26.0],5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(mapSaved);
+  } else {
+    mapSaved.invalidateSize();
+    mapSaved.eachLayer(l=>{ if(!(l instanceof L.TileLayer)) mapSaved.removeLayer(l); });
+  }
+  const bounds=[], cols=['#2e7d32','#1565c0','#6a1b9a','#e65100','#c62828','#00695c'];
+  SAVED.forEach((fig,i) => {
+    const col=cols[i%cols.length];
+    if (fig.figure.lat) { addFigMarker(mapSaved,fig.figure.lat,fig.figure.lon,fig.figure.name,col); bounds.push([fig.figure.lat,fig.figure.lon]); }
+    fig.plots.forEach(p => { if(p.lat){ L.circleMarker([p.lat,p.lon],{radius:6,fillColor:col,color:'white',weight:2,fillOpacity:.9}).bindPopup(`<strong>${fig.figure.name} — Koeala ${p.id}</strong><br>${p.trees.length} puuta`).addTo(mapSaved); bounds.push([p.lat,p.lon]); }});
   });
-  if (bounds.length) savedMap.fitBounds(bounds,{padding:[40,40],maxZoom:15});
+  if (bounds.length) mapSaved.fitBounds(bounds,{padding:[40,40],maxZoom:16});
 }
 
-function addFigureMarker(map,lat,lon,name,col) {
-  L.marker([lat,lon],{icon:L.divIcon({className:'',html:'<div style="background:'+col+';color:white;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.25)">'+name+'</div>',iconAnchor:[-5,10]})}).addTo(map);
+function addFigMarker(map, lat, lon, name, col) {
+  const icon = L.divIcon({ html:`<div style="background:${col};color:white;padding:3px 7px;border-radius:5px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3)">${name}</div>`, className:'', iconAnchor:[0,0] });
+  L.marker([lat,lon],{icon}).addTo(map);
 }
 
-function getGPSForFigure() {
-  const dot=document.getElementById('gpsDot'), label=document.getElementById('gpsLabel');
-  dot.className='gps-dot loading'; label.textContent='Haetaan...';
-  if (!navigator.geolocation) { showToast('❌ GPS ei tuettu'); return; }
-  navigator.geolocation.getCurrentPosition(pos=>{
+function highlightSummaryMap() {
+  if (!mapSummary) return;
+  mapSummary.eachLayer(l=>{ if(!(l instanceof L.TileLayer)) mapSummary.removeLayer(l); });
+  const all=allFigs(), cols=['#2e7d32','#1565c0','#6a1b9a','#e65100','#c62828','#00695c'], bounds=[];
+  all.forEach((fo,i) => {
+    const col=cols[i%cols.length], isSel=selFig&&selFig.figure.name===fo.figure.name;
+    if (fo.figure.lat) { addFigMarker(mapSummary,fo.figure.lat,fo.figure.lon,fo.figure.name,col); if(isSel) bounds.push([fo.figure.lat,fo.figure.lon]); }
+    fo.plots.forEach(p => {
+      if (!p.lat) return;
+      const isSelP = isSel&&selPlot&&selPlot.id===p.id;
+      L.circleMarker([p.lat,p.lon],{radius:isSelP?10:isSel?7:5,fillColor:col,color:'white',weight:isSelP?3:2,fillOpacity:isSel?1:.3})
+        .bindPopup(`<strong>${fo.figure.name} — Koeala ${p.id}</strong><br>${p.trees.length} puuta`).addTo(mapSummary);
+      if (isSel) bounds.push([p.lat,p.lon]);
+    });
+  });
+  if (bounds.length>1) mapSummary.fitBounds(bounds,{padding:[40,40],maxZoom:16});
+  else if (bounds.length===1) mapSummary.setView(bounds[0],14);
+}
+
+// ── GPS ────────────────────────────────────────────────────────────────────
+function getGPS(target) {
+  const dot=document.getElementById('gps-dot'), lbl=document.getElementById('gps-label');
+  if (!navigator.geolocation) { showToast('⚠️ GPS ei tuettu'); return; }
+  dot.className='gps-dot loading'; lbl.textContent='Haetaan sijaintia…';
+  navigator.geolocation.getCurrentPosition(pos => {
     const lat=pos.coords.latitude, lon=pos.coords.longitude;
-    document.getElementById('fig-coords').value=lat.toFixed(6)+', '+lon.toFixed(6);
-    dot.className='gps-dot ok'; label.textContent='GPS: ±'+Math.round(pos.coords.accuracy)+'m';
-    if (setupMap) { placeSetupMarker(lat,lon); setupMap.setView([lat,lon],14); }
-    showToast('📡 Sijainti haettu!');
-  },err=>{ dot.className='gps-dot'; label.textContent='GPS epäonnistui'; showToast('❌ '+err.message); },{enableHighAccuracy:true,timeout:10000});
+    dot.className='gps-dot active';
+    lbl.textContent=`📍 ${lat.toFixed(5)}, ${lon.toFixed(5)} (±${Math.round(pos.coords.accuracy)}m)`;
+    if (target==='fig') {
+      document.getElementById('fig-coords').value=`${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+      if (mapSetup) { placeSetupMarker(lat,lon); mapSetup.setView([lat,lon],15); }
+    } else {
+      document.getElementById('plot-coords').value=`${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+      S.plots[plotIdx].lat=lat; S.plots[plotIdx].lon=lon; persist();
+    }
+    showToast('📍 Sijainti tallennettu');
+  }, err => {
+    dot.className='gps-dot'; lbl.textContent='GPS epäonnistui';
+    showToast('⚠️ GPS-virhe: '+err.message);
+  }, {enableHighAccuracy:true,timeout:15000});
 }
 
-function getGPSForPlot() {
-  if (!navigator.geolocation) { showToast('❌ GPS ei tuettu'); return; }
-  showToast('📡 Haetaan sijaintia...');
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const lat=pos.coords.latitude, lon=pos.coords.longitude;
-    document.getElementById('plot-coords').value=lat.toFixed(6)+', '+lon.toFixed(6);
-    const plot=state.plots[activePlotIdx]; plot.lat=lat; plot.lon=lon; persist();
-    showToast('📡 Koealan sijainti tallennettu!');
-  },err=>showToast('❌ '+err.message),{enableHighAccuracy:true,timeout:10000});
-}
-
-// ═══════════════════════
-// SETUP / FIGURE
-// ═══════════════════════
+// ── FIGURE CREATION ────────────────────────────────────────────────────────
 function createFigure() {
   const name=document.getElementById('fig-name').value.trim();
-  const count=parseInt(document.getElementById('fig-plots').value);
-  if (!name) { showToast('⚠️ Anna kuviolle nimi'); return; }
-  if (!count||count<1) { showToast('⚠️ Anna koealojen määrä'); return; }
-  if (state.figure&&!confirm('Korvataanko nykyinen kuvio "'+state.figure.name+'"?')) return;
-  const coordsRaw=document.getElementById('fig-coords').value;
+  const cnt=parseInt(document.getElementById('fig-plots').value);
+  if (!name)     { showToast('⚠️ Anna kuviolle nimi'); return; }
+  if (!cnt||cnt<1){ showToast('⚠️ Anna koealojen määrä'); return; }
+  if (S.figure&&!confirm(`Korvataanko nykyinen kuvio "${S.figure.name}"?`)) return;
+
+  const raw=document.getElementById('fig-coords').value;
   let lat=null,lon=null;
-  if (coordsRaw) { const p=coordsRaw.split(',').map(s=>parseFloat(s.trim())); if(p.length===2&&!isNaN(p[0])){lat=p[0];lon=p[1];} }
+  if (raw) { const p=raw.split(',').map(s=>parseFloat(s.trim())); if(p.length===2&&!isNaN(p[0])){lat=p[0];lon=p[1];} }
 
-  // New fields
-  const figArea   = parseFloat(document.getElementById('fig-area').value) || null;
-  const plotShape = document.getElementById('fig-plot-shape').value || null;
-  const plotSize  = parseFloat(document.getElementById('fig-plot-size').value) || null;
-  const plotArea  = calcPlotArea(plotShape, plotSize);
-  const plotFactor= plotArea ? Math.ceil(10000 / plotArea) : null;
+  const figArea=parseFloat(document.getElementById('fig-area').value)||null;
+  const shape  =document.getElementById('fig-shape').value||null;
+  const size   =parseFloat(document.getElementById('fig-size').value)||null;
+  const area   =pArea(shape,size);
+  const factor =pFactor(area);
 
-  state.figure={name,plotCount:count,lat,lon,savedAt:null,figArea,plotShape,plotSize,plotArea,plotFactor};
-  state.plots=Array.from({length:count},(_,i)=>({id:i+1,trees:[],lat:null,lon:null}));
-  persist(); renderSidebar(); updateTopbar(); showSetupCurrent();
-  showToast('✅ Kuvio "'+name+'" luotu — '+count+' koealaa');
-  setTimeout(()=>showPlot(0), 150);
+  S.figure={name,plotCount:cnt,lat,lon,savedAt:null,figArea,shape,size,pArea:area,pFactor:factor};
+  S.plots=Array.from({length:cnt},(_,i)=>({id:i+1,trees:[],lat:null,lon:null}));
+  persist(); renderSidebar(); updateTopbar(); renderActiveFig();
+  showToast(`✅ Kuvio "${name}" luotu — ${cnt} koealaa`);
+  setTimeout(()=>showPlot(0),150);
 }
 
-function resetCurrent() {
-  if (state.figure&&!confirm('Nollataan aktiivinen kuvio?')) return;
-  state={figure:null,plots:[]}; persist(); renderSidebar(); updateTopbar();
-  document.getElementById('setup-current').style.display='none';
-  ['fig-name','fig-plots','fig-coords','fig-area','fig-plot-size'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  const shapeEl=document.getElementById('fig-plot-shape'); if(shapeEl) shapeEl.value='';
-  const sf=document.getElementById('fig-plot-size-field'); if(sf) sf.style.display='none';
-  const pv=document.getElementById('fig-plot-area-preview'); if(pv) pv.style.display='none';
-  if (setupMarker&&setupMap){setupMap.removeLayer(setupMarker);setupMarker=null;}
-  showToast('🗑 Nollattu');
+function resetSetup() {
+  ['fig-name','fig-plots','fig-coords','fig-area','fig-size'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  document.getElementById('fig-shape').value='';
+  document.getElementById('fig-size-wrap').style.display='none';
+  document.getElementById('area-preview').style.display='none';
 }
 
-// ── PLOT SHAPE / AREA HELPERS ──
-function calcPlotArea(shape, size) {
-  if (!shape || shape === 'relaskoop') return null;
-  if (!size || size <= 0) return null;
-  if (shape === 'circle') return Math.PI * size * size;
-  if (shape === 'square') return size * size;
-  return null;
+function renderActiveFig() {
+  const w=document.getElementById('active-fig-wrap');
+  if (!S.figure) { w.style.display='none'; return; }
+  w.style.display='block';
+  const f=S.figure, total=S.plots.reduce((s,p)=>s+p.trees.length,0);
+  document.getElementById('active-fig-name').textContent=f.name;
+  let meta=`Koealoja: ${f.plotCount} · Puita: ${total}`;
+  if (f.figArea) meta+=` · ${f.figArea} ha`;
+  if (f.pArea)   meta+=` · ${shapeLabel(f.shape)} A=${f.pArea.toFixed(1)} m² · Kerroin ${f.pFactor}`;
+  document.getElementById('active-fig-meta').textContent=meta;
 }
 
-function plotShapeLabel(shape) {
-  return shape === 'circle' ? 'Ympyräkoeala' : shape === 'square' ? 'Neliökoeala' : shape === 'relaskoop' ? 'Relaskooppikoeala' : '—';
-}
-
-function plotSizeLabel(shape, size) {
-  if (!shape || !size) return '';
-  return shape === 'circle' ? 'r = '+size+' m' : 's = '+size+' m';
-}
-
-function updatePlotShapeInput() {
-  const shape = document.getElementById('fig-plot-shape').value;
-  const sizeField = document.getElementById('fig-plot-size-field');
-  const sizeLabel = document.getElementById('fig-plot-size-label');
-  const preview   = document.getElementById('fig-plot-area-preview');
-  if (!shape || shape === 'relaskoop') {
-    sizeField.style.display = 'none';
-    if (shape === 'relaskoop') {
-      preview.style.display = 'block';
-      preview.innerHTML = '⭕ <strong>Relaskooppikoeala</strong> — pinta-ala määräytyy BAF-kertoimen ja puuston mukaan. Syötä BAF mittausikkunassa.';
-    } else {
-      preview.style.display = 'none';
-    }
-    return;
-  }
-  sizeField.style.display = 'flex';
-  sizeLabel.textContent = shape === 'circle' ? 'Säde r (m)' : 'Sivu s (m)';
-  document.getElementById('fig-plot-size').placeholder = shape === 'circle' ? 'esim. 5.64' : 'esim. 10';
-  updatePlotAreaPreview();
-}
-
-function updatePlotAreaPreview() {
-  const shape = document.getElementById('fig-plot-shape').value;
-  const size  = parseFloat(document.getElementById('fig-plot-size').value);
-  const preview = document.getElementById('fig-plot-area-preview');
-  const area = calcPlotArea(shape, size);
-  if (!area) { preview.style.display='none'; return; }
-  const factor = Math.ceil(10000 / area);
-  preview.style.display='block';
-  preview.innerHTML = '📐 Koealan pinta-ala: <strong>'+area.toFixed(2)+' m²</strong> &nbsp;·&nbsp; Koealakerroin: <strong>'+factor+'</strong> (kpl/ha ≈ runkoluku × '+factor+')';
-}
-
-function showSetupCurrent() {
-  if (!state.figure){document.getElementById('setup-current').style.display='none';return;}
-  document.getElementById('setup-current').style.display='block';
-  const total=state.plots.reduce((s,p)=>s+p.trees.length,0);
-  const f=state.figure;
-  let extra='';
-  if (f.figArea) extra+='Kuvion ala: <strong>'+f.figArea+' ha</strong> &nbsp;·&nbsp; ';
-  if (f.plotArea) extra+='Koeala: <strong>'+f.plotArea.toFixed(2)+' m²</strong> &nbsp;·&nbsp; Kerroin: <strong>'+f.plotFactor+'</strong>';
-  document.getElementById('setup-current-info').innerHTML=
-    '<strong style="font-size:16px">'+f.name+'</strong><br>'+
-    'Koealoja: <strong>'+f.plotCount+'</strong> &nbsp;·&nbsp; Puita: <strong>'+total+'</strong>'+
-    (extra?'<br>'+extra:'');
-}
-
-// ═══════════════════════
-// SIDEBAR / TOPBAR
-// ═══════════════════════
+// ── SIDEBAR & TOPBAR ───────────────────────────────────────────────────────
 function renderSidebar() {
-  const sec=document.getElementById('plot-sidebar-section'), list=document.getElementById('plot-list');
-  if (!state.figure||!state.plots.length){sec.style.display='none';return;}
+  const sec=document.getElementById('sidebar-plots'), lst=document.getElementById('sidebar-plot-list');
+  if (!S.figure||!S.plots.length) { sec.style.display='none'; return; }
   sec.style.display='block';
-  const isPlot=document.getElementById('view-plot').classList.contains('active');
-  list.innerHTML=state.plots.map((p,i)=>`
-    <div class="plot-item ${isPlot&&i===activePlotIdx?'active':''}" onclick="showPlot(${i})">
-      <div class="plot-item-left"><span class="plot-num">${p.id}</span><span class="plot-name">Koeala ${p.id}</span></div>
-      <span class="plot-tree-count">${p.trees.length||'–'}</span>
+  lst.innerHTML=S.plots.map((p,i)=>`
+    <div class="plot-list-item ${i===plotIdx?'active':''}" onclick="showPlot(${i})">
+      <span>${S.figure.name.slice(0,14)} — K${p.id}</span>
+      <span class="plot-list-num">${p.trees.length}</span>
     </div>`).join('');
 }
 
 function updateTopbar() {
-  const figEl=document.getElementById('tb-figure'), treesEl=document.getElementById('tb-trees');
-  if (!state.figure){figEl.textContent='Ei kuviota';treesEl.style.display='none';return;}
-  const total=state.plots.reduce((s,p)=>s+p.trees.length,0);
-  figEl.innerHTML='📁 <strong>'+state.figure.name+'</strong>';
-  treesEl.style.display=''; treesEl.textContent=total+' puuta';
+  const tf=document.getElementById('tb-fig'), tt=document.getElementById('tb-trees');
+  if (!S.figure) { tf.textContent='Ei kuviota'; tt.style.display='none'; return; }
+  tf.textContent=S.figure.name;
+  const total=S.plots.reduce((s,p)=>s+p.trees.length,0);
+  tt.style.display='inline'; tt.textContent=`${total} puuta`;
 }
 
-// ═══════════════════════
-// PLOT VIEW
-// ═══════════════════════
+// ── PLOT VIEW ──────────────────────────────────────────────────────────────
 function renderPlotView() {
-  if (!state.figure) return;
-  const plot=state.plots[activePlotIdx];
-  document.getElementById('plot-view-title').textContent='Koeala '+plot.id;
-  document.getElementById('plot-view-sub').textContent=state.figure.name+' · '+(activePlotIdx+1)+' / '+state.plots.length;
-  document.getElementById('tree-count-label').textContent=plot.trees.length+' puuta';
-  document.getElementById('review-count-label').textContent=plot.trees.length+' puuta';
-  document.getElementById('plot-coords').value=plot.lat?plot.lat.toFixed(6)+', '+plot.lon.toFixed(6):'';
-  renderPlotNumBtns();
-  updateFinishBar();
-  renderPlotStatsPanel(plot);
-
-  // Show/hide relaskooppi panel vs normal tree entry
-  const isRelaskoop = state.figure && state.figure.plotShape === 'relaskoop';
-  const relaPanel = document.getElementById('relaskoop-panel');
-  const normalEntry = document.getElementById('normal-tree-entry');
-  if (relaPanel) relaPanel.style.display = isRelaskoop ? 'block' : 'none';
-  if (normalEntry) normalEntry.style.display = isRelaskoop ? 'none' : 'block';
-  if (isRelaskoop) renderRelaspeciesInputs();
-
-  renderInputTable(plot);
+  if (!S.figure) return;
+  const p=S.plots[plotIdx];
+  document.getElementById('plot-title').textContent=`Koeala ${p.id}`;
+  document.getElementById('plot-sub').textContent=`${S.figure.name} · ${plotIdx+1} / ${S.plots.length}`;
+  document.getElementById('input-count').textContent=`${p.trees.length} puuta`;
+  document.getElementById('review-count').textContent=`${p.trees.length} puuta`;
+  document.getElementById('plot-coords').value=p.lat?`${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}`:'';
+  renderNavBtns(); renderStatsPanel(p); renderInputTable(p); updateFinishBar();
   if (activeTab==='review') renderReviewTable();
   document.getElementById('t-species').value='';
   document.getElementById('t-dbh').value='';
@@ -1034,1143 +773,426 @@ function renderPlotView() {
   setTimeout(()=>document.getElementById('t-species').focus(),60);
 }
 
-function renderPlotNumBtns() {
-  if (!state.figure) return;
-  const container = document.getElementById('plot-num-btns');
-  if (!container) return;
-  const MAX_SHOW = 15;
-  const n = state.plots.length;
-  // If too many plots, show condensed: first, current±2, last
-  let indices;
-  if (n <= MAX_SHOW) {
-    indices = state.plots.map((_,i)=>i);
-  } else {
-    const set = new Set([0, n-1, activePlotIdx-2, activePlotIdx-1, activePlotIdx, activePlotIdx+1, activePlotIdx+2].filter(i=>i>=0&&i<n));
-    indices = [...set].sort((a,b)=>a-b);
-  }
-  let html = '';
-  let prev = -1;
-  indices.forEach(i => {
-    if (prev>=0 && i>prev+1) html += '<span style="color:var(--text-muted);font-size:12px;padding:0 2px">…</span>';
-    const p = state.plots[i];
-    const active = i===activePlotIdx ? 'active' : '';
-    const hasTrees = p.trees.length>0 ? 'has-trees' : '';
-    html += `<button class="plot-num-btn ${active} ${hasTrees}" onclick="showPlot(${i})" title="Koeala ${p.id} — ${p.trees.length} puuta">${p.id}</button>`;
-    prev = i;
+function renderNavBtns() {
+  const c=document.getElementById('plot-nav');
+  if (!S.figure) return;
+  const n=S.plots.length, MAX=15;
+  let idxs;
+  if (n<=MAX) idxs=S.plots.map((_,i)=>i);
+  else { const set=new Set([0,n-1,plotIdx-2,plotIdx-1,plotIdx,plotIdx+1,plotIdx+2].filter(i=>i>=0&&i<n)); idxs=[...set].sort((a,b)=>a-b); }
+  let h=`<button class="nav-arrow" onclick="prevPlot()" ${plotIdx===0?'disabled':''}>←</button>`;
+  let prev=-1;
+  idxs.forEach(i=>{
+    if(prev>=0&&i>prev+1) h+='<span class="nav-dots">…</span>';
+    const p=S.plots[i], cls=(i===plotIdx?'current ':'')+( p.trees.length?'has-data':'');
+    h+=`<button class="plot-num-btn ${cls}" onclick="showPlot(${i})" title="Koeala ${p.id} · ${p.trees.length} puuta">${p.id}</button>`;
+    prev=i;
   });
-  container.innerHTML = html;
-  // disable arrows at ends
-  const prevBtn = document.getElementById('btn-prev-plot');
-  const nextBtn = document.getElementById('btn-next-plot');
-  if (prevBtn) prevBtn.disabled = activePlotIdx===0;
-  if (nextBtn) nextBtn.disabled = activePlotIdx===state.plots.length-1;
+  h+=`<button class="nav-arrow" onclick="nextPlot()" ${plotIdx===n-1?'disabled':''}>→</button>`;
+  c.innerHTML=h;
 }
 
-function updateFinishBar() {
-  const total=state.plots.reduce((s,p)=>s+p.trees.length,0);
-  const withTrees=state.plots.filter(p=>p.trees.length>0).length;
-  document.getElementById('finish-summary-text').textContent=withTrees+' / '+state.plots.length+' koealalla on puita — '+total+' puuta yhteensä.';
-}
+function prevPlot(){ if(plotIdx>0) showPlot(plotIdx-1); }
+function nextPlot(){ if(plotIdx<S.plots.length-1) showPlot(plotIdx+1); }
 
-// ── PLOT STATS PANEL ──
-function renderPlotStatsPanel(plot) {
-  const el = document.getElementById('plot-stats-panel');
+// ── STATS PANEL ────────────────────────────────────────────────────────────
+function renderStatsPanel(plot) {
+  const el=document.getElementById('stats-panel');
   if (!el) return;
+  const f=S.figure, trees=plot.trees;
+  const dg=calcDg(trees), ah=avgH(trees), ba=sumBA(trees), factor=f?.pFactor||null;
+  const baHa=(factor&&trees.length)?ba*factor:null, nHa=factor?trees.length*factor:null;
 
-  const f = state.figure;
-  const trees = plot.trees;
+  let meta='<div class="stats-meta">';
+  if (f?.shape)  meta+=`<span><span class="badge badge-g">${shapeLabel(f.shape)}</span></span>`;
+  if (f?.size)   meta+=`<span>${sizeLabel(f.shape,f.size)}</span>`;
+  if (f?.pArea)  meta+=`<span>A = ${f.pArea.toFixed(1)} m²</span>`;
+  if (factor)    meta+=`<span><span class="badge badge-b">Kerroin ${factor}</span></span>`;
+  if (f?.figArea)meta+=`<span>Kuvio: ${f.figArea} ha</span>`;
+  meta+='</div>';
 
-  // Koealan perustiedot
-  const hasArea = f && f.plotArea;
-  const factor  = hasArea ? f.plotFactor : null;
-
-  // Tilastot
-  const dbhs    = trees.filter(t=>t.dbh).map(t=>parseFloat(t.dbh));
-  const heights = trees.filter(t=>t.height).map(t=>parseFloat(t.height));
-  const dg = calcDg(trees); const avgD = dg !== null ? dg.toFixed(1) : null;
-  const avgH    = heights.length ? (heights.reduce((a,b)=>a+b,0)/heights.length).toFixed(1) : null;
-  const runkoluku = trees.length;
-  const totalBa = dbhs.reduce((sum,d)=>{ const ba=calcBasalArea(d); return ba!==null?sum+ba:sum; }, 0);
-  const totalBaStr = dbhs.length ? totalBa.toFixed(4) : null;
-
-  // Hehtaarikohtaiset
-  const baHa  = hasArea && dbhs.length  ? (totalBa * factor).toFixed(2)  : null;
-  const nHa   = hasArea ? (runkoluku * factor) : null;
-
-  // Koealan info-rivi
-  let infoHtml = '<div class="plot-koeala-info">';
-  if (f && f.plotShape) {
-    infoHtml += '<span><span class="badge-green">'+plotShapeLabel(f.plotShape)+'</span></span>';
-    if (f.plotSize) infoHtml += '<span>'+plotSizeLabel(f.plotShape, f.plotSize)+'</span>';
-    if (f.plotArea) infoHtml += '<span>A = '+f.plotArea.toFixed(2)+' m²</span>';
+  function tile(label,val,unit,ha){
+    return `<div class="stat-tile"><div class="stat-tile-label">${label}</div><div class="stat-tile-val">${val!==null?val:'—'}</div><div class="stat-tile-unit">${unit}</div>${ha?`<div class="stat-tile-ha">≈ ${ha}</div>`:''}</div>`;
   }
-  if (factor) infoHtml += '<span><span class="badge-blue">Kerroin '+factor+'</span></span>';
-  if (f && f.figArea) infoHtml += '<span>Kuvio: '+f.figArea+' ha</span>';
-  infoHtml += '</div>';
 
-  // Stat-boxes
-  const stats = [
-    { label:'Runkoluku',    val: runkoluku,          unit:'kpl',   ha: nHa   ? nHa+' kpl/ha'  : null },
-    { label:'Dg (PPA-pain.)', val: avgD ?? '—',      unit:'cm',    ha: null },
-    { label:'Keskim. h',    val: avgH ?? '—',        unit:'m',     ha: null },
-    { label:'PPA koealalla',val: totalBaStr ?? '—',  unit:'m²',    ha: baHa  ? baHa+' m²/ha'  : null },
-  ];
-
-  const statsHtml = '<div class="plot-stats-grid">'+stats.map(s=>`
-    <div class="plot-stat">
-      <div class="plot-stat-label">${s.label}</div>
-      <div class="plot-stat-val">${s.val}</div>
-      <div class="plot-stat-unit">${s.unit}${s.ha ? ' &nbsp;<span style="color:var(--blue);font-weight:700;font-size:11px">≈ '+s.ha+'</span>' : ''}</div>
-    </div>`).join('')+'</div>';
-
-  el.innerHTML =
-    '<div style="font-family:\'Inconsolata\',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-weight:600;margin-bottom:4px">📊 Koealan tunnusluvut</div>'+
-    infoHtml + statsHtml;
+  el.innerHTML=`<div class="stats-panel-title">📊 Koealan tunnusluvut</div>${meta}
+    <div class="stats-grid">
+      ${tile('Runkoluku',   trees.length,                          'kpl',  nHa?`${nHa} /ha`:null)}
+      ${tile('Dg (PPA-p.)', dg!==null?dg.toFixed(1):null,         'cm',   null)}
+      ${tile('Keskim. h',   ah!==null?ah.toFixed(1):null,         'm',    null)}
+      ${tile('PPA',         trees.length?ba.toFixed(4):null,      'm²',   baHa?`${baHa.toFixed(2)} m²/ha`:null)}
+    </div>`;
 }
 
-// ── INPUT TABLE ──
+// ── INPUT TABLE ────────────────────────────────────────────────────────────
 function renderInputTable(plot) {
-  const el=document.getElementById('tree-table-input');
-  if (!plot.trees.length){el.innerHTML='<div class="empty-table">Ei puita vielä. Täytä lomake yllä.</div>';return;}
-  el.innerHTML=`<table>
-    <thead><tr><th>Puu #</th><th>Puulaji</th><th>d1.3 (cm)</th><th>h (m)</th><th>Tilavuus</th><th>PPA (m²)</th><th></th></tr></thead>
+  const el=document.getElementById('input-table');
+  if (!plot.trees.length) { el.innerHTML='<div class="empty-table">Ei puita. Lisää ensimmäinen puu yllä.</div>'; return; }
+  el.innerHTML=`<table><thead><tr><th>#</th><th>Puulaji</th><th style="text-align:right">d1.3</th><th style="text-align:right">h</th><th style="text-align:right">PPA (m²)</th></tr></thead>
     <tbody>${plot.trees.map(t=>{
-      const v=calcVolume(t.species,t.dbh,t.height);
-      const ba=calcBasalArea(t.dbh);
-      return `<tr>
-        <td class="tree-num">${t.num}</td>
-        <td><span class="species-pill">${t.species}</span></td>
-        <td class="val-cell">${t.dbh??'—'}</td>
-        <td class="val-cell">${t.height??'—'}</td>
-        <td>${volDisplay(v)}</td>
-        <td style="font-family:'Inconsolata',monospace;font-size:12px;color:var(--green-mid)">${ba!==null?ba.toFixed(4):'—'}</td>
-        <td><button class="btn-danger" onclick="deleteTree(${activePlotIdx},${t.num})">✕</button></td>
-      </tr>`;}).join('')}</tbody></table>`;
-}
-
-// ── REVIEW TABLE (editable) ──
-function renderReviewTable() {
-  const plot=state.plots[activePlotIdx];
-  const el=document.getElementById('tree-table-review');
-  const countEl=document.getElementById('review-count-label');
-  const volEl=document.getElementById('review-vol-total');
-  countEl.textContent=plot.trees.length+' puuta';
-
-  if (!plot.trees.length){el.innerHTML='<div class="empty-table">Ei puita tällä koealalla.</div>';volEl.textContent='';return;}
-
-  // Total volume + total basal area
-  let totalVol=0, volCount=0, totalBa=0, baCount=0;
-  plot.trees.forEach(t=>{
-    const v=calcVolume(t.species,t.dbh,t.height); if(v!==null){totalVol+=v;volCount++;}
-    const ba=calcBasalArea(t.dbh); if(ba!==null){totalBa+=ba;baCount++;}
-  });
-  volEl.textContent = [
-    volCount>0?'Tilavuus: '+totalVol.toFixed(1)+' dm³':'',
-    baCount>0?'PPA: '+totalBa.toFixed(4)+' m²':''
-  ].filter(Boolean).join('  |  ');
-
-  el.innerHTML=`<table>
-    <thead><tr>
-      <th>Puu #</th><th>Puulaji</th><th>d1.3 (cm)</th><th>h (m)</th>
-      <th>Tilavuus</th><th>PPA (m²)</th><th>Muokkaa</th>
-    </tr></thead>
-    <tbody>${plot.trees.map(t=>{
-      const v=calcVolume(t.species,t.dbh,t.height);
-      const ba=calcBasalArea(t.dbh);
-      const isEditing=editingTree&&editingTree.plotIdx===activePlotIdx&&editingTree.treeNum===t.num;
-      if (isEditing) {
-        return `<tr style="background:var(--amber-pale)">
-          <td class="tree-num">${t.num}</td>
-          <td>
-            <select id="edit-species" style="min-width:130px;padding:6px 8px;font-size:13px">
-              <option value="Mänty" ${t.species==='Mänty'?'selected':''}>Mänty</option>
-              <option value="Kuusi" ${t.species==='Kuusi'?'selected':''}>Kuusi</option>
-              <option value="Rauduskoivu" ${t.species==='Rauduskoivu'?'selected':''}>Rauduskoivu</option>
-              <option value="Muu havupuu" ${t.species==='Muu havupuu'?'selected':''}>Muu havupuu</option>
-              <option value="Muu lehtipuu" ${t.species==='Muu lehtipuu'?'selected':''}>Muu lehtipuu</option>
-            </select>
-          </td>
-          <td><input type="number" id="edit-dbh" value="${t.dbh??''}" step="0.1" min="0" style="width:80px;padding:6px 8px;font-size:13px"></td>
-          <td><input type="number" id="edit-height" value="${t.height??''}" step="0.1" min="0" style="width:80px;padding:6px 8px;font-size:13px"></td>
-          <td colspan="2" style="color:var(--amber);font-size:12px;font-family:'Inconsolata',monospace">muokkaus...</td>
-          <td>
-            <div style="display:flex;gap:6px">
-              <button class="btn-primary" style="padding:5px 12px;font-size:12px" onclick="saveEdit(${t.num})">✓ OK</button>
-              <button class="btn-ghost" style="padding:5px 10px;font-size:12px" onclick="cancelEdit()">✕</button>
-            </div>
-          </td>
-        </tr>`;
-      }
-      return `<tr>
-        <td class="tree-num">${t.num}</td>
-        <td><span class="species-pill">${t.species}</span></td>
-        <td class="val-cell">${t.dbh??'—'}</td>
-        <td class="val-cell">${t.height??'—'}</td>
-        <td>${volDisplay(v)}</td>
-        <td style="font-family:'Inconsolata',monospace;font-size:12px;color:var(--green-mid)">${ba!==null?ba.toFixed(4):'—'}</td>
-        <td>
-          <div style="display:flex;gap:6px">
-            <button class="btn-edit" onclick="startEdit(${activePlotIdx},${t.num})">✏️ Muokkaa</button>
-            <button class="btn-danger" onclick="deleteTree(${activePlotIdx},${t.num})">✕</button>
-          </div>
-        </td>
-      </tr>`;
+      const ba=calcBA(t.dbh);
+      return `<tr><td class="num-cell">${t.num}</td><td><span class="species-pill">${t.species}</span></td><td class="val-cell">${t.dbh??'—'}</td><td class="val-cell">${t.height??'—'}</td><td class="val-cell" style="color:var(--green-mid)">${ba!==null?ba.toFixed(4):'—'}</td></tr>`;
     }).join('')}</tbody></table>`;
 }
 
-// ── ADD TREE ──
+// ── REVIEW TABLE ───────────────────────────────────────────────────────────
+function renderReviewTable() {
+  const plot=S.plots[plotIdx], el=document.getElementById('review-table');
+  const vol=sumVol(plot.trees), ba=sumBA(plot.trees);
+  document.getElementById('review-totals').textContent=plot.trees.length?`V: ${vol!==null?vol.toFixed(1):'—'} dm³ | PPA: ${ba.toFixed(4)} m²`:'';
+  if (!plot.trees.length) { el.innerHTML='<div class="empty-table">Ei puita tällä koealalla.</div>'; return; }
+  const SPECIES=['Mänty','Kuusi','Rauduskoivu','Muu havupuu','Muu lehtipuu'];
+  el.innerHTML=`<table><thead><tr><th>#</th><th>Puulaji</th><th style="text-align:right">d1.3</th><th style="text-align:right">h</th><th>Tilavuus</th><th style="text-align:right">PPA (m²)</th><th></th></tr></thead>
+    <tbody>${plot.trees.map(t=>{
+      const v=calcVolume(t.species,t.dbh,t.height), ba=calcBA(t.dbh);
+      const isEd=editing&&editing.plotIdx===plotIdx&&editing.num===t.num;
+      if (isEd) return `<tr style="background:var(--amber-pale)">
+        <td class="num-cell">${t.num}</td>
+        <td><select id="e-sp" style="font-size:12px;padding:4px">${SPECIES.map(s=>`<option ${s===t.species?'selected':''}>${s}</option>`).join('')}</select></td>
+        <td><input type="number" id="e-dbh" value="${t.dbh??''}" step="0.1" style="width:70px;font-size:12px;padding:4px"></td>
+        <td><input type="number" id="e-h"   value="${t.height??''}" step="0.1" style="width:70px;font-size:12px;padding:4px"></td>
+        <td colspan="2"></td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-success" style="padding:5px 10px;font-size:12px" onclick="saveEdit(${t.num})">✓</button>
+          <button class="btn btn-ghost"   style="padding:5px 10px;font-size:12px;margin-left:4px" onclick="cancelEdit()">✕</button>
+        </td></tr>`;
+      return `<tr>
+        <td class="num-cell">${t.num}</td><td><span class="species-pill">${t.species}</span></td>
+        <td class="val-cell">${t.dbh??'—'}</td><td class="val-cell">${t.height??'—'}</td>
+        <td>${volHTML(v)}</td><td class="val-cell" style="color:var(--green-mid)">${ba!==null?ba.toFixed(4):'—'}</td>
+        <td style="white-space:nowrap">
+          <button class="btn-danger" onclick="startEdit(${plotIdx},${t.num})">✎</button>
+          <button class="btn-danger" onclick="deleteTree(${plotIdx},${t.num})">✕</button>
+        </td></tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+// ── TREE CRUD ──────────────────────────────────────────────────────────────
 function addTree() {
-  if (!state.figure){showToast('⚠️ Luo ensin kuvio');return;}
-  const species=document.getElementById('t-species').value;
-  const dbh=document.getElementById('t-dbh').value;
-  const height=document.getElementById('t-height').value;
-  if (!species){showToast('⚠️ Valitse puulaji');document.getElementById('t-species').focus();return;}
-  const coordsRaw=document.getElementById('plot-coords').value;
-  const plot=state.plots[activePlotIdx];
-  if (coordsRaw&&!plot.lat){const p=coordsRaw.split(',').map(s=>parseFloat(s.trim()));if(p.length===2&&!isNaN(p[0])){plot.lat=p[0];plot.lon=p[1];}}
+  const sp=document.getElementById('t-species').value;
+  const d=document.getElementById('t-dbh').value;
+  const h=document.getElementById('t-height').value;
+  if (!sp) { showToast('⚠️ Valitse puulaji'); return; }
+  const plot=S.plots[plotIdx];
   const num=plot.trees.length?Math.max(...plot.trees.map(t=>t.num))+1:1;
-  plot.trees.push({num,species,dbh:dbh||null,height:height||null});
-  persist(); renderInputTable(plot);
-  document.getElementById('tree-count-label').textContent=plot.trees.length+' puuta';
-  renderSidebar(); updateTopbar(); updateFinishBar(); showSetupCurrent();
-  renderPlotStatsPanel(plot);
+  plot.trees.push({num,species:sp,dbh:d||null,height:h||null});
+  persist();
+  const v=calcVolume(sp,d,h), ba=calcBA(d);
+  let msg=`✅ Puu ${num} lisätty`;
+  if(ba!==null) msg+=` · PPA ${ba.toFixed(4)} m²`;
+  if(v!==null)  msg+=` · ${v.toFixed(1)} dm³`;
+  showToast(msg);
   document.getElementById('t-species').value='';
   document.getElementById('t-dbh').value='';
   document.getElementById('t-height').value='';
   document.getElementById('t-species').focus();
-  const v=calcVolume(species,dbh,height);
-  const ba=calcBasalArea(dbh);
-  const vStr=v!==null?' | v='+v.toFixed(1)+'dm³':'';
-  const baStr=ba!==null?' | g='+ba.toFixed(4)+'m²':'';
-  showToast('🌲 Puu '+num+' — '+species+vStr+baStr);
+  renderInputTable(plot); renderStatsPanel(plot); renderNavBtns();
+  document.getElementById('input-count').textContent=`${plot.trees.length} puuta`;
+  updateTopbar(); renderSidebar(); renderActiveFig(); updateFinishBar();
 }
 
-function deleteTree(plotIdx,treeNum) {
-  const plot=state.plots[plotIdx];
-  plot.trees=plot.trees.filter(t=>t.num!==treeNum);
-  editingTree=null; persist();
-  renderInputTable(plot); renderReviewTable();
-  document.getElementById('tree-count-label').textContent=plot.trees.length+' puuta';
-  renderSidebar(); updateTopbar(); updateFinishBar(); showSetupCurrent();
-  renderPlotStatsPanel(plot);
-  showToast('🗑 Puu poistettu');
+function deleteTree(pi,num) {
+  const p=S.plots[pi]; p.trees=p.trees.filter(t=>t.num!==num); editing=null; persist();
+  renderInputTable(p); renderReviewTable(); renderStatsPanel(p); renderNavBtns();
+  document.getElementById('input-count').textContent=`${p.trees.length} puuta`;
+  document.getElementById('review-count').textContent=`${p.trees.length} puuta`;
+  updateTopbar(); renderSidebar(); renderActiveFig(); updateFinishBar();
 }
 
-// ── EDIT ──
-function startEdit(plotIdx, treeNum) {
-  editingTree={plotIdx,treeNum};
-  renderReviewTable();
-  setTimeout(()=>{ const el=document.getElementById('edit-dbh'); if(el) el.focus(); }, 50);
-}
+function startEdit(pi,num) { editing={plotIdx:pi,num}; renderReviewTable(); }
 
-function saveEdit(treeNum) {
-  const plot=state.plots[activePlotIdx];
-  const tree=plot.trees.find(t=>t.num===treeNum);
-  if (!tree) return;
-  const newSpecies=document.getElementById('edit-species').value;
-  const newDbh=document.getElementById('edit-dbh').value;
-  const newHeight=document.getElementById('edit-height').value;
-  tree.species=newSpecies;
-  tree.dbh=newDbh||null;
-  tree.height=newHeight||null;
-  editingTree=null; persist();
-  renderInputTable(plot); renderReviewTable();
-  renderPlotStatsPanel(plot);
+function saveEdit(num) {
+  const plot=S.plots[plotIdx], tree=plot.trees.find(t=>t.num===num);
+  if(!tree) return;
+  tree.species=document.getElementById('e-sp').value;
+  tree.dbh    =document.getElementById('e-dbh').value||null;
+  tree.height =document.getElementById('e-h').value  ||null;
+  editing=null; persist();
+  renderInputTable(plot); renderReviewTable(); renderStatsPanel(plot);
   const v=calcVolume(tree.species,tree.dbh,tree.height);
-  const vStr=v!==null?' | v = '+v.toFixed(1)+' dm³':'';
-  showToast('✅ Puu '+treeNum+' päivitetty'+vStr);
+  showToast(`✅ Puu ${num} päivitetty${v!==null?' · '+v.toFixed(1)+' dm³':''}`);
 }
 
-function cancelEdit() { editingTree=null; renderReviewTable(); }
+function cancelEdit() { editing=null; renderReviewTable(); }
 
-function prevPlot(){if(activePlotIdx>0)showPlot(activePlotIdx-1);}
-function nextPlot(){if(activePlotIdx<state.plots.length-1)showPlot(activePlotIdx+1);}
+// ── FINISH BAR ─────────────────────────────────────────────────────────────
+function updateFinishBar() {
+  const total=S.plots.reduce((s,p)=>s+p.trees.length,0);
+  const with_=S.plots.filter(p=>p.trees.length>0).length;
+  document.getElementById('finish-text').textContent=`${total} puuta mitattu · ${with_} / ${S.plots?.length??0} koealaa`;
+}
 
-// ═══════════════════════
-// FINISH MODAL
-// ═══════════════════════
+// ── MODAL ──────────────────────────────────────────────────────────────────
 function openFinishModal() {
-  if (!state.figure){showToast('⚠️ Ei aktiivista kuviota');return;}
-  const total=state.plots.reduce((s,p)=>s+p.trees.length,0);
-  const withTrees=state.plots.filter(p=>p.trees.length>0).length;
-  const allTrees=state.plots.flatMap(p=>p.trees);
-  const vols=allTrees.map(t=>calcVolume(t.species,t.dbh,t.height)).filter(v=>v!==null);
-  const totalVol=vols.reduce((a,b)=>a+b,0);
-  document.getElementById('modal-summary-text').innerHTML=
-    'Kuvio: <strong>'+state.figure.name+'</strong><br>'+
-    'Koealoja: '+state.plots.length+' ('+withTrees+' mitattu)<br>'+
-    'Puita: '+total+'<br>'+
-    (totalVol>0?'Kokonaistilavuus (Mänty/Kuusi/Koivu): <strong>'+totalVol.toFixed(1)+' dm³</strong><br>':'')+'<br>'+
-    'Kuvio tallennetaan ja CSV ladataan automaattisesti.';
+  if (!S.figure) { showToast('⚠️ Ei aktiivista kuviota'); return; }
+  const total=S.plots.reduce((s,p)=>s+p.trees.length,0);
+  const v=sumVol(S.plots.flatMap(p=>p.trees));
+  document.getElementById('finish-modal-text').textContent=`Tallennetaan kuvio "${S.figure.name}" — ${S.plots.length} koealaa, ${total} puuta, tilavuus ${v!==null?v.toFixed(1)+' dm³':'—'}.`;
   document.getElementById('finish-modal').classList.add('open');
 }
 
-function closeModal(){document.getElementById('finish-modal').classList.remove('open');}
+function closeModal() { document.getElementById('finish-modal').classList.remove('open'); }
 
 function finishAndSave() {
-  closeModal();
-  state.figure.savedAt=new Date().toISOString();
-  const entry=JSON.parse(JSON.stringify({figure:state.figure,plots:state.plots}));
-  const existing=savedFigures.findIndex(f=>f.figure.name===state.figure.name);
-  if(existing>=0)savedFigures[existing]=entry; else savedFigures.push(entry);
-  persistSaved(); exportCSV(true);
-  showToast('✅ Kuvio tallennettu!');
-  state={figure:null,plots:[]}; persist(); renderSidebar(); updateTopbar();
-  document.getElementById('setup-current').style.display='none';
-  setTimeout(()=>showView('saved',document.getElementById('nb-saved')),600);
+  if (!S.figure) return;
+  S.figure.savedAt=new Date().toISOString();
+  SAVED.push({figure:{...S.figure},plots:S.plots.map(p=>({...p,trees:[...p.trees]}))});
+  persistSaved();
+  const name=S.figure.name;
+  exportCSV(true);
+  S=BLANK(); persist();
+  closeModal(); renderSidebar(); updateTopbar(); renderActiveFig();
+  showView('saved'); showToast(`✅ Kuvio "${name}" tallennettu!`);
 }
 
-// ═══════════════════════
-// SUMMARY — interactive browser
-// ═══════════════════════
-let summarySelectedFig = null;  // { figure, plots, isActive }
-let summarySelectedPlot = null; // plot object
-let summaryMarkers = [];
+// ── SUMMARY ────────────────────────────────────────────────────────────────
+function allFigs() {
+  const a=[];
+  if (S.figure) a.push({figure:S.figure,plots:S.plots,isActive:true});
+  SAVED.forEach(f=>a.push({...f,isActive:false}));
+  return a;
+}
 
 function renderSummary() {
-  // Build figure list: active + saved
-  const allFigures = [];
-  if (state.figure) allFigures.push({ figure: state.figure, plots: state.plots, isActive: true });
-  savedFigures.forEach(f => allFigures.push({ ...f, isActive: false }));
-
-  // Figure list panel
-  const listEl = document.getElementById('summary-fig-list');
-  if (!allFigures.length) {
-    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px">Ei kuvioita vielä.</div>';
-    document.getElementById('summary-detail').innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">Luo ensin kuvio asetuksista.</div>';
-    return;
-  }
-
-  listEl.innerHTML = allFigures.map((f, fi) => {
-    const total = f.plots.reduce((s,p)=>s+p.trees.length, 0);
-    const vols = f.plots.flatMap(p=>p.trees).map(t=>calcVolume(t.species,t.dbh,t.height)).filter(v=>v!==null);
-    const totalVol = vols.length ? vols.reduce((a,b)=>a+b,0).toFixed(1) : '—';
-    const isSelected = summarySelectedFig && summarySelectedFig.figure.name === f.figure.name;
-    return `<div class="fig-card ${isSelected?'active':''}" onclick="selectSummaryFig(${fi})">
-      <div class="fig-card-status ${f.isActive?'active-badge':'saved-badge'}">${f.isActive?'● Aktiivinen':'✓ Tallennettu'}</div>
+  const figs=allFigs(), listEl=document.getElementById('fig-list'), detEl=document.getElementById('summary-detail');
+  if (!figs.length) { listEl.innerHTML='<div style="color:var(--text-muted);font-size:13px;padding:10px">Ei kuvioita.</div>'; detEl.innerHTML='<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">Luo ensin kuvio.</div>'; return; }
+  listEl.innerHTML=figs.map((f,i)=>{
+    const total=f.plots.reduce((s,p)=>s+p.trees.length,0), vol=sumVol(f.plots.flatMap(p=>p.trees));
+    const isSel=selFig&&selFig.figure.name===f.figure.name;
+    return `<div class="fig-card ${isSel?'sel':''}" onclick="selFigure(${i})">
+      <div class="fig-badge ${f.isActive?'badge-active':'badge-saved'}">${f.isActive?'● Aktiivinen':'✓ Tallennettu'}</div>
       <div class="fig-card-name">${f.figure.name}</div>
-      <div class="fig-card-meta">
-        <span>${f.plots.length} koealaa</span>
-        <span>${total} puuta</span>
-        <span>${totalVol} dm³</span>
-      </div>
+      <div class="fig-card-meta"><span>${f.plots.length} koealaa</span><span>${total} puuta</span>${vol!==null?`<span>${vol.toFixed(0)} dm³</span>`:''}</div>
     </div>`;
   }).join('');
-
-  // Auto-select first if nothing selected
-  if (!summarySelectedFig && allFigures.length) {
-    summarySelectedFig = allFigures[0];
-    summarySelectedPlot = null;
-  }
+  if (!selFig&&figs.length) { selFig=figs[0]; selPlot=null; }
   renderSummaryDetail();
 }
 
-function selectSummaryFig(fi) {
-  const allFigures = [];
-  if (state.figure) allFigures.push({ figure: state.figure, plots: state.plots, isActive: true });
-  savedFigures.forEach(f => allFigures.push({ ...f, isActive: false }));
-  summarySelectedFig = allFigures[fi];
-  summarySelectedPlot = null;
-  renderSummary();
-  highlightSummaryMap();
-}
-
-function selectSummaryPlot(plotId) {
-  if (!summarySelectedFig) return;
-  const plot = summarySelectedFig.plots.find(p => p.id === plotId);
-  summarySelectedPlot = plot || null;
-  renderSummaryDetail();
-  highlightSummaryMap();
-}
-
-function backToFigure() {
-  summarySelectedPlot = null;
-  renderSummaryDetail();
-  highlightSummaryMap();
-}
+function selFigure(i) { selFig=allFigs()[i]; selPlot=null; renderSummary(); highlightSummaryMap(); }
+function selPlotDrill(id) { if(!selFig) return; selPlot=selFig.plots.find(p=>p.id===id)||null; renderSummaryDetail(); highlightSummaryMap(); }
+function backToFig()  { selPlot=null; renderSummaryDetail(); highlightSummaryMap(); }
 
 function renderSummaryDetail() {
-  const el = document.getElementById('summary-detail');
-  if (!summarySelectedFig) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">Valitse kuvio.</div>'; return; }
-
-  if (summarySelectedPlot) {
-    renderPlotDrilldown(el, summarySelectedFig, summarySelectedPlot);
-  } else {
-    renderFigureDetail(el, summarySelectedFig);
-  }
+  const el=document.getElementById('summary-detail');
+  if (!selFig) { el.innerHTML='<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">Valitse kuvio.</div>'; return; }
+  selPlot ? renderDrilldown(el) : renderFigDetail(el);
 }
 
-// ── Figure-level detail ──
-function renderFigureDetail(el, figObj) {
-  const f = figObj.figure;
-  const plots = figObj.plots;
-  const allTrees = plots.flatMap(p => p.trees.map(t=>({...t, plotId:p.id})));
-  const dbhs = allTrees.filter(t=>t.dbh).map(t=>parseFloat(t.dbh));
-  const heights = allTrees.filter(t=>t.height).map(t=>parseFloat(t.height));
-  const vols = allTrees.map(t=>calcVolume(t.species,t.dbh,t.height)).filter(v=>v!==null);
-  const bas = allTrees.map(t=>calcBasalArea(t.dbh)).filter(v=>v!==null);
+function sBox(label,val,unit) {
+  return `<div class="stat-box"><div class="stat-box-label">${label}</div><div class="stat-box-val" style="font-size:${String(val).length>5?'18px':'24px'}">${val}</div><div class="stat-box-unit">${unit}</div></div>`;
+}
 
-  const dg = calcDg(allTrees); const avgD = dg !== null ? dg.toFixed(1) : '—';
-  const avgH = heights.length ? (heights.reduce((a,b)=>a+b,0)/heights.length).toFixed(1) : '—';
-  const totalVol = vols.length ? vols.reduce((a,b)=>a+b,0).toFixed(1) : '—';
-  const totalBa  = bas.length  ? bas.reduce((a,b)=>a+b,0).toFixed(4) : '—';
-  const speciesSet = [...new Set(allTrees.map(t=>t.species))];
-
-  // Per-species breakdown
-  const speciesBreakdown = speciesSet.map(sp => {
-    const sTrees = allTrees.filter(t=>t.species===sp);
-    const sVols = sTrees.map(t=>calcVolume(t.species,t.dbh,t.height)).filter(v=>v!==null);
-    const sVol = sVols.length ? sVols.reduce((a,b)=>a+b,0).toFixed(1) : '—';
-    return `<tr><td><span class="species-pill">${sp}</span></td><td class="tree-num">${sTrees.length}</td><td class="val-cell">${sVol}</td></tr>`;
+function renderFigDetail(el) {
+  const f=selFig.figure, plots=selFig.plots;
+  const allT=plots.flatMap(p=>p.trees.map(t=>({...t,plotId:p.id})));
+  const dg=calcDg(allT), ah=avgH(allT), ba=sumBA(allT), vol=sumVol(allT);
+  const sps=[...new Set(allT.map(t=>t.species))];
+  const spRows=sps.map(sp=>{ const st=allT.filter(t=>t.species===sp),sv=sumVol(st); return `<tr><td><span class="species-pill">${sp}</span></td><td class="num-cell" style="text-align:right">${st.length}</td><td class="val-cell">${sv!==null?sv.toFixed(1):'—'}</td></tr>`; }).join('');
+  const plotCards=plots.map(p=>{ const pba=sumBA(p.trees),pvol=sumVol(p.trees),isSel=selPlot&&selPlot.id===p.id;
+    return `<div class="drill-card ${isSel?'sel':''}" onclick="selPlotDrill(${p.id})">
+      <div style="display:flex;align-items:center"><span class="drill-num">${p.id}</span><div><div style="font-size:13px;font-weight:600;color:var(--text-mid)">Koeala ${p.id}</div><div class="drill-stats"><span>${p.trees.length} puuta</span>${p.trees.length?`<span>PPA ${pba.toFixed(3)} m²</span>`:''} ${pvol!==null?`<span>${pvol.toFixed(1)} dm³</span>`:''}</div></div></div>
+      <span style="color:var(--text-muted);font-size:18px">›</span></div>`;
   }).join('');
 
-  // Plot list
-  const plotListHtml = plots.map(p => {
-    const pDbhs = p.trees.filter(t=>t.dbh).map(t=>parseFloat(t.dbh));
-    const pBa = pDbhs.reduce((s,d)=>{ const ba=calcBasalArea(d); return ba!==null?s+ba:s; }, 0);
-    const pVols = p.trees.map(t=>calcVolume(t.species,t.dbh,t.height)).filter(v=>v!==null);
-    const pVol = pVols.length ? pVols.reduce((a,b)=>a+b,0).toFixed(1) : '—';
-    return `<div class="plot-detail-card" onclick="selectSummaryPlot(${p.id})">
-      <div class="plot-detail-left">
-        <span class="plot-detail-num">${p.id}</span>
-        <div>
-          <div style="font-size:13px;color:var(--text-mid);font-weight:600">Koeala ${p.id}</div>
-          <div class="plot-detail-stats">
-            <span>${p.trees.length} puuta</span>
-            ${pDbhs.length ? '<span>PPA '+pBa.toFixed(3)+' m²</span>' : ''}
-            ${pVol!=='—'?'<span>'+pVol+' dm³</span>':''}
-          </div>
-        </div>
+  el.innerHTML=`
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      <div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">${f.name}</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:2px">${f.figArea?f.figArea+' ha · ':''}${f.shape?shapeLabel(f.shape)+' · ':''}${f.pArea?'A='+f.pArea.toFixed(1)+' m² · ':''}${f.pFactor?'Kerroin '+f.pFactor:''}</div></div>
+      <span class="fig-badge ${selFig.isActive?'badge-active':'badge-saved'}">${selFig.isActive?'● Aktiivinen':'✓ Tallennettu'}</span>
+    </div>
+    <div class="stat-grid" style="margin-bottom:16px">
+      ${sBox('Koealoja',plots.length,'kpl')}${sBox('Puita',allT.length,'kpl')}
+      ${sBox('Dg',dg!==null?dg.toFixed(1):'—','cm')}${sBox('Keskim. h',ah!==null?ah.toFixed(1):'—','m')}
+      ${sBox('Tilavuus',vol!==null?vol.toFixed(1):'—','dm³')}${sBox('PPA yht.',allT.length?ba.toFixed(4):'—','m²')}
+    </div>
+    ${sps.length?`<div class="section-label" style="margin-bottom:8px">Puulajit</div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px"><table>
+      <thead><tr><th>Puulaji</th><th style="text-align:right">Kpl</th><th>V (dm³)</th></tr></thead>
+      <tbody>${spRows}</tbody></table></div>`:''}
+    <div class="section-label" style="margin-bottom:8px">Koealat — klikkaa avataksesi</div>${plotCards}`;
+}
+
+function renderDrilldown(el) {
+  const f=selFig.figure, p=selPlot, trees=p.trees;
+  const dg=calcDg(trees),ah=avgH(trees),ba=sumBA(trees),vol=sumVol(trees),factor=f.pFactor||null;
+  const baHa=factor&&trees.length?(ba*factor).toFixed(2):null, nHa=factor?trees.length*factor:null;
+  const rows=trees.length?trees.map(t=>{ const v=calcVolume(t.species,t.dbh,t.height),ba=calcBA(t.dbh);
+    return `<tr><td class="num-cell">${t.num}</td><td><span class="species-pill">${t.species}</span></td><td class="val-cell">${t.dbh??'—'}</td><td class="val-cell">${t.height??'—'}</td><td>${volHTML(v)}</td><td class="val-cell" style="color:var(--green-mid)">${ba!==null?ba.toFixed(4):'—'}</td></tr>`;
+  }).join(''):`<tr><td colspan="6" class="empty-table">Ei puita.</td></tr>`;
+
+  el.innerHTML=`
+    <button class="detail-back" onclick="backToFig()">← ${f.name}</button>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      <div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">Koeala ${p.id}</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:2px">${f.name} · ${f.shape?shapeLabel(f.shape)+' '+sizeLabel(f.shape,f.size)+' · ':''} ${f.pArea?'A='+f.pArea.toFixed(1)+' m²':''}</div></div>
+      ${p.lat?`<div style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted)">📍 ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</div>`:''}
+    </div>
+    <div class="stat-grid" style="margin-bottom:16px">
+      ${sBox('Runkoluku', trees.length,'kpl'+(nHa?'<br><span style="color:var(--blue);font-size:10px">≈ '+nHa+' /ha</span>':''))}
+      ${sBox('Dg',dg!==null?dg.toFixed(1):'—','cm')}${sBox('Keskim. h',ah!==null?ah.toFixed(1):'—','m')}
+      ${sBox('PPA',trees.length?ba.toFixed(4):'—','m²'+(baHa?'<br><span style="color:var(--blue);font-size:10px">≈ '+baHa+' m²/ha</span>':''))}
+      ${sBox('Tilavuus',vol!==null?vol.toFixed(1):'—','dm³')}
+    </div>
+    <div class="section-label" style="margin-bottom:8px">Puut koealalla ${p.id}</div>
+    <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap">
+      <table><thead><tr><th>#</th><th>Puulaji</th><th>d1.3</th><th>h</th><th>Tilavuus</th><th>PPA (m²)</th></tr></thead>
+      <tbody>${rows}</tbody></table></div></div>`;
+}
+
+// ── SAVED VIEW ─────────────────────────────────────────────────────────────
+function renderSaved() {
+  const el=document.getElementById('saved-list');
+  if (!SAVED.length) { el.innerHTML='<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">Ei tallennettuja kuvioita.</div>'; return; }
+  el.innerHTML=SAVED.map((fig,i)=>{
+    const total=fig.plots.reduce((s,p)=>s+p.trees.length,0), vol=sumVol(fig.plots.flatMap(p=>p.trees));
+    const d=fig.figure.savedAt?new Date(fig.figure.savedAt).toLocaleDateString('fi-FI'):'—';
+    return `<div class="saved-card">
+      <div class="saved-card-name">${fig.figure.name}</div>
+      <div class="saved-card-meta">${fig.plots.length} koealaa · ${total} puuta · ${vol!==null?vol.toFixed(1)+' dm³':'—'} · Tallennettu ${d}</div>
+      <div class="saved-actions">
+        <button class="btn btn-outline" onclick="exportCSVFromSaved(${i})">⬇ CSV</button>
+        <button class="btn btn-ghost"   onclick="deleteSaved(${i})">🗑 Poista</button>
       </div>
-      <span style="color:var(--text-muted);font-size:18px">›</span>
     </div>`;
   }).join('');
-
-  el.innerHTML = `
-    <div class="detail-section">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text)">${f.name}</div>
-          <div style="font-size:12px;color:var(--text-dim);margin-top:2px">
-            ${f.figArea ? f.figArea+' ha &nbsp;·&nbsp;' : ''}
-            ${f.plotShape ? plotShapeLabel(f.plotShape)+' &nbsp;·&nbsp;' : ''}
-            ${f.plotArea ? 'A = '+f.plotArea.toFixed(1)+' m² &nbsp;·&nbsp;' : ''}
-            ${f.plotFactor ? 'Kerroin '+f.plotFactor : ''}
-          </div>
-        </div>
-        ${figObj.isActive ? '<span class="fig-card-status active-badge">● Aktiivinen</span>' : '<span class="fig-card-status saved-badge">✓ Tallennettu</span>'}
-      </div>
-      <div class="summary-grid" style="margin-bottom:14px">
-        ${statBox('Koealoja', plots.length, 'kpl')}
-        ${statBox('Puita', allTrees.length, 'kpl')}
-        ${statBox('Dg (PPA-pain.)', avgD, 'cm')}
-        ${statBox('Keskim. h', avgH, 'm')}
-        ${statBox('Tilavuus', totalVol, 'dm³')}
-        ${statBox('PPA yht.', totalBa, 'm²')}
-      </div>
-    </div>
-
-    ${speciesSet.length ? `
-    <div class="detail-section">
-      <div class="detail-section-title">Puulajit</div>
-      <div class="card" style="padding:0;overflow:hidden">
-        <table><thead><tr><th>Puulaji</th><th>Kpl</th><th>Tilavuus (dm³)</th></tr></thead>
-        <tbody>${speciesBreakdown}</tbody></table>
-      </div>
-    </div>` : ''}
-
-    <div class="detail-section">
-      <div class="detail-section-title">Koealat — klikkaa avataksesi</div>
-      <div class="plot-detail-list">${plotListHtml}</div>
-    </div>
-  `;
 }
 
-// ── Plot drilldown ──
-function renderPlotDrilldown(el, figObj, plot) {
-  const f = figObj.figure;
-  const dbhs = plot.trees.filter(t=>t.dbh).map(t=>parseFloat(t.dbh));
-  const heights = plot.trees.filter(t=>t.height).map(t=>parseFloat(t.height));
-  const dg = calcDg(plot.trees); const avgD = dg !== null ? dg.toFixed(1) : '—';
-  const avgH = heights.length ? (heights.reduce((a,b)=>a+b,0)/heights.length).toFixed(1) : '—';
-  const totalBa = dbhs.reduce((s,d)=>{ const ba=calcBasalArea(d); return ba!==null?s+ba:s; }, 0);
-  const vols = plot.trees.map(t=>calcVolume(t.species,t.dbh,t.height)).filter(v=>v!==null);
-  const totalVol = vols.length ? vols.reduce((a,b)=>a+b,0).toFixed(1) : '—';
-  const factor = f.plotFactor || null;
-  const baHa = (factor && dbhs.length) ? (totalBa*factor).toFixed(2) : null;
-  const nHa  = factor ? plot.trees.length * factor : null;
-
-  const treeRows = plot.trees.length ? plot.trees.map(t => {
-    const v = calcVolume(t.species, t.dbh, t.height);
-    const ba = calcBasalArea(t.dbh);
-    return `<tr>
-      <td class="tree-num">${t.num}</td>
-      <td><span class="species-pill">${t.species}</span></td>
-      <td class="val-cell">${t.dbh??'—'}</td>
-      <td class="val-cell">${t.height??'—'}</td>
-      <td>${volDisplay(v)}</td>
-      <td style="font-family:'Inconsolata',monospace;font-size:12px;color:var(--green-mid)">${ba!==null?ba.toFixed(4):'—'}</td>
-    </tr>`;
-  }).join('') : `<tr><td colspan="6" class="empty-table">Ei puita tällä koealalla.</td></tr>`;
-
-  el.innerHTML = `
-    <button class="detail-back-btn" onclick="backToFigure()">← ${f.name}</button>
-
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <div>
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text)">Koeala ${plot.id}</div>
-        <div style="font-size:12px;color:var(--text-dim);margin-top:2px">
-          ${f.name} &nbsp;·&nbsp;
-          ${f.plotShape ? plotShapeLabel(f.plotShape)+' '+plotSizeLabel(f.plotShape,f.plotSize)+' &nbsp;·&nbsp;' : ''}
-          ${f.plotArea ? 'A = '+f.plotArea.toFixed(1)+' m²' : ''}
-        </div>
-      </div>
-      ${plot.lat ? `<div style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted)">📍 ${plot.lat.toFixed(5)}, ${plot.lon.toFixed(5)}</div>` : ''}
-    </div>
-
-    <div class="summary-grid" style="margin-bottom:18px">
-      ${statBox('Runkoluku', plot.trees.length, 'kpl'+(nHa?'<br><span style="color:var(--blue);font-size:11px">≈ '+nHa+' /ha</span>':''))}
-      ${statBox('Dg (PPA-pain.)', avgD, 'cm')}
-      ${statBox('Keskim. h', avgH, 'm')}
-      ${statBox('PPA', dbhs.length?totalBa.toFixed(4):'—', 'm²'+(baHa?'<br><span style="color:var(--blue);font-size:11px">≈ '+baHa+' m²/ha</span>':''))}
-      ${statBox('Tilavuus', totalVol, 'dm³')}
-    </div>
-
-    <div class="detail-section">
-      <div class="detail-section-title">Puut koealalla ${plot.id}</div>
-      <div class="card" style="padding:0;overflow:hidden">
-        <div class="drill-table-wrap">
-          <table>
-            <thead><tr><th>Puu #</th><th>Puulaji</th><th>d1.3 (cm)</th><th>h (m)</th><th>Tilavuus</th><th>PPA (m²)</th></tr></thead>
-            <tbody>${treeRows}</tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  `;
+function deleteSaved(i) {
+  if(!confirm(`Poistetaanko "${SAVED[i].figure.name}"?`)) return;
+  SAVED.splice(i,1); persistSaved(); renderSaved(); initSavedMap(); showToast('🗑 Poistettu');
 }
 
-// Helper: single stat box HTML
-function statBox(label, val, unit) {
-  return `<div class="stat-box">
-    <div class="stat-box-label">${label}</div>
-    <div class="stat-box-val" style="font-size:${String(val).length>5?'20px':'28px'}">${val}</div>
-    <div class="stat-box-unit">${unit}</div>
-  </div>`;
-}
-
-// Highlight map for selected figure/plot
-function highlightSummaryMap() {
-  if (!summaryMap) return;
-  summaryMap.eachLayer(l=>{ if(!(l instanceof L.TileLayer)) summaryMap.removeLayer(l); });
-
-  const allFigures = [];
-  if (state.figure) allFigures.push({ figure: state.figure, plots: state.plots, isActive: true });
-  savedFigures.forEach(f => allFigures.push({ ...f, isActive: false }));
-
-  const cols = ['#2e7d32','#1565c0','#6a1b9a','#e65100','#c62828','#00695c'];
-  const bounds = [];
-
-  allFigures.forEach((figObj, fi) => {
-    const col = cols[fi % cols.length];
-    const isSelectedFig = summarySelectedFig && summarySelectedFig.figure.name === figObj.figure.name;
-    const opacity = isSelectedFig ? 1 : 0.35;
-
-    if (figObj.figure.lat) {
-      addFigureMarker(summaryMap, figObj.figure.lat, figObj.figure.lon, figObj.figure.name, col);
-      if (isSelectedFig) bounds.push([figObj.figure.lat, figObj.figure.lon]);
-    }
-
-    figObj.plots.forEach(p => {
-      if (!p.lat) return;
-      const isSelectedPlot = isSelectedFig && summarySelectedPlot && summarySelectedPlot.id === p.id;
-      const radius = isSelectedPlot ? 10 : isSelectedFig ? 7 : 5;
-      const weight = isSelectedPlot ? 3 : 2;
-      const marker = L.circleMarker([p.lat, p.lon], {
-        radius, fillColor: col, color: 'white', weight, fillOpacity: opacity
-      }).bindPopup(`<strong>${figObj.figure.name} — Koeala ${p.id}</strong><br>${p.trees.length} puuta`);
-      marker.addTo(summaryMap);
-      if (isSelectedFig) bounds.push([p.lat, p.lon]);
-    });
-  });
-
-  if (bounds.length > 0) summaryMap.fitBounds(bounds, {padding:[40,40], maxZoom:16});
-  else if (allFigures.some(f=>f.figure.lat)) {
-    const allBounds = allFigures.filter(f=>f.figure.lat).map(f=>[f.figure.lat, f.figure.lon]);
-    summaryMap.fitBounds(allBounds, {padding:[40,40], maxZoom:12});
-  }
-}
-
-// ═══════════════════════
-// SAVED VIEW
-// ═══════════════════════
-function renderSaved() {
-  const el=document.getElementById('saved-list-content');
-  if (!savedFigures.length){el.innerHTML='<div class="empty-table" style="background:white;border-radius:12px;border:1px solid var(--border)">Ei vielä tallennettuja kuvioita.</div>';return;}
-  el.innerHTML=savedFigures.map((fig,fi)=>{
-    const total=fig.plots.reduce((s,p)=>s+p.trees.length,0);
-    const vols=fig.plots.flatMap(p=>p.trees).map(t=>calcVolume(t.species,t.dbh,t.height)).filter(v=>v!==null);
-    const totalVol=vols.length?vols.reduce((a,b)=>a+b,0).toFixed(1):null;
-    const d=new Date(fig.figure.savedAt);
-    const ds=d.toLocaleDateString('fi-FI')+' '+d.toLocaleTimeString('fi-FI',{hour:'2-digit',minute:'2-digit'});
-    return `<div class="saved-item">
-      <div class="saved-item-info">
-        <strong>${fig.figure.name}</strong>
-        <div class="saved-item-meta">
-          Tallennettu: ${ds} &nbsp;·&nbsp; ${fig.plots.length} koealaa &nbsp;·&nbsp; ${total} puuta
-          ${totalVol?'&nbsp;·&nbsp;<span style="color:var(--blue)">'+totalVol+' dm³</span>':''}
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn-outline" onclick="exportCSVFromSaved(${fi})">⬇ CSV</button>
-        <button class="btn-danger" onclick="deleteSaved(${fi})">Poista</button>
-      </div>
-    </div>`;}).join('');
-}
-
-function deleteSaved(idx){if(!confirm('Poistetaanko "'+savedFigures[idx].figure.name+'"?'))return;savedFigures.splice(idx,1);persistSaved();renderSaved();initSavedMap();showToast('🗑 Poistettu');}
-
-// ═══════════════════════
-// CSV EXPORT — Metsätietostandardi
-// Ei koordinaattisarakkeita, ei virhemarginaalia
-// Lisätty: PohjapintaAlaG (m²)
-// ═══════════════════════
+// ── CSV ────────────────────────────────────────────────────────────────────
 function buildCSV(figure, plots) {
-  const header = [
-    'KuvioTunnus',        // Kuvion nimi/tunnus
-    'KoealaNumero',       // Koealan järjestysnumero
-    'PuuNumero',          // Puun järjestysnumero koealalla
-    'Puulaji',            // Puulaji (suomenkielinen nimi)
-    'PuulajiKoodi',       // VMI-puulajikoodi
-    'LapimittaluokkaD13', // Rinnankorkeusläpimitta (cm)
-    'PituusH',            // Puun pituus (m)
-    'RunkotilavuusV',     // Laskennallinen runkotilavuus (dm³)
-    'PohjapintaAlaG',     // Puun pohjapinta-ala π*r² (m²)
-    'MittausPvm',         // Mittauspäivämäärä (ISO 8601)
-  ];
+  const BOM='\uFEFF', SEP=' ; ';
+  const header=['KuvioTunnus','KoealaNumero','PuuNumero','Puulaji','PuulajiKoodi','LapimittaluokkaD13','PituusH','RunkotilavuusV','PohjapintaAlaG','MittausPvm'].join(SEP);
+  const codes={'Mänty':1,'Kuusi':2,'Rauduskoivu':3,'Muu havupuu':4,'Muu lehtipuu':5};
+  const date=figure.savedAt?new Date(figure.savedAt).toLocaleDateString('fi-FI'):new Date().toLocaleDateString('fi-FI');
+  const rows=plots.flatMap(p=>p.trees.map(t=>{
+    const v=calcVolume(t.species,t.dbh,t.height), ba=calcBA(t.dbh);
+    return [figure.name,p.id,t.num,t.species,codes[t.species]??9,t.dbh??'',t.height??'',v!==null?v.toFixed(3):'',ba!==null?ba.toFixed(6):'',date].join(SEP);
+  }));
+  return BOM+[header,...rows].join('\r\n');
+}
 
-  const vmiCode = {
-    'Mänty': '1', 'Kuusi': '2', 'Rauduskoivu': '3',
-    'Muu havupuu': '9', 'Muu lehtipuu': '29'
-  };
+function dl(content,filename,mime) { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content],{type:mime})); a.download=filename; a.click(); }
+function exportCSV(silent) { if(!S.figure){if(!silent)showToast('⚠️ Ei dataa');return;} dl(buildCSV(S.figure,S.plots),`maastodata_${S.figure.name.replace(/\s+/g,'_')}.csv`,'text/csv;charset=utf-8;'); if(!silent)showToast('✅ CSV ladattu!'); }
+function exportCSVFromSaved(i) { const f=SAVED[i]; dl(buildCSV(f.figure,f.plots),`maastodata_${f.figure.name.replace(/\s+/g,'_')}.csv`,'text/csv;charset=utf-8;'); showToast('✅ CSV ladattu!'); }
+function exportAllCSV() { const all=allFigs(); if(!all.length){showToast('⚠️ Ei dataa');return;} dl(all.map(f=>buildCSV(f.figure,f.plots)).join('\r\n'),'maastodata_kaikki.csv','text/csv;charset=utf-8;'); showToast('✅ Kaikki CSV ladattu!'); }
+function exportJSON() { if(!S.figure){showToast('⚠️ Ei dataa');return;} dl(JSON.stringify(S,null,2),'maastodata.json','application/json'); showToast('✅ JSON ladattu!'); }
 
-  const today = new Date().toISOString().split('T')[0];
-  const rows = [header];
+// ── PDF ────────────────────────────────────────────────────────────────────
+function exportPDF() {
+  if (!S.figure) { showToast('⚠️ Ei aktiivista kuviota'); return; }
+  showToast('📄 Valmistellaan raporttia…');
+  captureAndPrint();
+}
 
-  plots.forEach(p => {
-    if (!p.trees.length) {
-      rows.push([figure.name, p.id, '', '', '', '', '', '', '', today]);
-    } else {
-      p.trees.forEach(t => {
-        const v  = calcVolume(t.species, t.dbh, t.height);
-        const ba = calcBasalArea(t.dbh);
-        rows.push([
-          figure.name,
-          p.id,
-          t.num,
-          t.species,
-          vmiCode[t.species] ?? '',
-          t.dbh   ?? '',
-          t.height ?? '',
-          v  !== null ? v.toFixed(1)  : '',
-          ba !== null ? ba.toFixed(6) : '',
-          today
-        ]);
-      });
+async function captureAndPrint() {
+  const figObj={figure:S.figure,plots:S.plots};
+  const f=figObj.figure, allT=figObj.plots.flatMap(p=>p.trees.map(t=>({...t,plotId:p.id})));
+  const dg=calcDg(allT), ah=avgH(allT), ba=sumBA(allT), vol=sumVol(allT);
+  const sps=[...new Set(allT.map(t=>t.species))];
+  const now=new Date().toLocaleDateString('fi-FI');
+
+  // Map capture
+  let mapHtml='<div style="padding:20px;text-align:center;background:#f5f5f5;border:1px solid #ddd;border-radius:4px;color:#999">Karttakuva ei saatavilla — GPS-sijainteja ei tallennettu</div>';
+  try {
+    if (!mapSummary) { initSummaryMap(); await new Promise(r=>setTimeout(r,600)); }
+    selFig=figObj; highlightSummaryMap();
+    await new Promise(r=>setTimeout(r,1400));
+    if (typeof html2canvas!=='undefined') {
+      const canvas=await html2canvas(document.getElementById('summary-map'),{useCORS:true,allowTaint:true,logging:false,scale:1.5});
+      mapHtml=`<img src="${canvas.toDataURL('image/png')}" style="width:100%;max-width:600px;border:1px solid #ccc;border-radius:4px;display:block;margin:0 auto">`;
     }
-  });
+  } catch(e){}
 
-  return '\uFEFF' + rows.map(r => r.join(';')).join('\n');
+  function pr(label,val,bg) { return `<tr${bg?' style="background:#f5f5f5"':''}><td style="padding:4px 8px;color:#666;width:200px">${label}</td><td style="padding:4px 8px">${val}</td></tr>`; }
+
+  const plotRows=figObj.plots.map(p=>{ const pba=sumBA(p.trees),pvol=sumVol(p.trees),pdg=calcDg(p.trees),ph=avgH(p.trees),fac=f.pFactor;
+    return `<tr><td>${p.id}</td><td>${p.trees.length}</td><td>${pdg!==null?pdg.toFixed(1):'—'}</td><td>${ph!==null?ph.toFixed(1):'—'}</td><td>${pba.toFixed(4)}</td><td>${fac&&p.trees.length?(pba*fac).toFixed(2):'—'}</td><td>${pvol!==null?pvol.toFixed(1):'—'}</td></tr>`;
+  }).join('');
+
+  const treeRows=allT.map(t=>{ const v=calcVolume(t.species,t.dbh,t.height),ba=calcBA(t.dbh);
+    return `<tr><td>${t.plotId}</td><td>${t.num}</td><td>${t.species}</td><td style="text-align:right">${t.dbh??'—'}</td><td style="text-align:right">${t.height??'—'}</td><td style="text-align:right">${v!==null?v.toFixed(1):'—'}</td><td style="text-align:right">${ba!==null?ba.toFixed(4):'—'}</td></tr>`;
+  }).join('');
+
+  const html=`<!DOCTYPE html><html lang="fi"><head><meta charset="UTF-8"><title>MaastoData — ${f.name} — ${now}</title>
+  <style>body{font-family:Arial,sans-serif;font-size:10.5pt;color:#222;margin:20px 28px;}h1{font-size:18pt;margin-bottom:3px;}h2{font-size:12pt;border-bottom:2px solid #2e7d32;padding-bottom:3px;margin:18px 0 9px;}table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:9.5pt;}th{background:#2e7d32;color:white;padding:5px 7px;text-align:left;}td{padding:4px 7px;border-bottom:1px solid #eee;}tr:nth-child(even) td{background:#f9f9f9;}.meta td:first-child{color:#666;}@page{size:A4;margin:14mm;}@media print{body{margin:0;}}</style>
+  </head><body>
+  <h1>Maastomittausraportti</h1><p style="color:#666;margin-bottom:18px;font-size:9pt">Tulostettu: ${now} · MaastoData</p>
+  <h2>Karttaote</h2><div style="margin-bottom:18px">${mapHtml}</div>
+  <h2>Kuvion perustiedot</h2>
+  <table class="meta">${pr('Kuvion tunnus',`<strong>${f.name}</strong>`)}${pr('Pinta-ala',f.figArea?f.figArea+' ha':'—',true)}${pr('Koealan muoto',f.shape?shapeLabel(f.shape)+' — '+sizeLabel(f.shape,f.size):'—')}${pr('Koealan pinta-ala',f.pArea?f.pArea.toFixed(2)+' m²':'—',true)}${pr('Koealakerroin',f.pFactor??'—')}${pr('Koealoja',figObj.plots.length+' kpl',true)}</table>
+  <h2>Puustotunnukset</h2>
+  <table class="meta">${pr('Runkoluku',allT.length+' kpl')}${pr('Dg (PPA-painotettu)',dg!==null?dg.toFixed(1)+' cm':'—',true)}${pr('Keskipituus',ah!==null?ah.toFixed(1)+' m':'—')}${pr('Pohjapinta-ala yht.',allT.length?ba.toFixed(4)+' m²':'—',true)}${pr('Kokonaistilavuus',vol!==null?vol.toFixed(1)+' dm³':'—')}${pr('Puulajit',sps.join(', '),true)}</table>
+  <h2>Koealakohtaiset tulokset</h2>
+  <table><thead><tr><th>Koeala</th><th>Puita</th><th>Dg (cm)</th><th>H (m)</th><th>PPA (m²)</th><th>PPA (m²/ha)</th><th>V (dm³)</th></tr></thead><tbody>${plotRows}</tbody></table>
+  <h2>Puuluettelo</h2>
+  <table><thead><tr><th>Koeala</th><th>Puu</th><th>Puulaji</th><th>d1.3 (cm)</th><th>h (m)</th><th>V (dm³)</th><th>PPA (m²)</th></tr></thead><tbody>${treeRows}</tbody></table>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close();w.onload=()=>{w.focus();w.print();};}
+  else showToast('⚠️ Salli ponnahdusikkunat selaimessa');
 }
 
-function exportCSV(silent){if(!state.figure){if(!silent)showToast('⚠️ Ei dataa');return;}dl(buildCSV(state.figure,state.plots),'maastodata_'+state.figure.name.replace(/\s+/g,'_')+'.csv','text/csv;charset=utf-8;');if(!silent)showToast('✅ CSV ladattu!');}
-function exportCSVFromSaved(idx){const fig=savedFigures[idx];dl(buildCSV(fig.figure,fig.plots),'maastodata_'+fig.figure.name.replace(/\s+/g,'_')+'.csv','text/csv;charset=utf-8;');showToast('✅ CSV ladattu!');}
-function exportAllCSV(){
-  if(!savedFigures.length&&!state.figure){showToast('⚠️ Ei tallennettuja kuvioita');return;}
-  const vmiCode={'Mänty':'1','Kuusi':'2','Rauduskoivu':'3','Muu havupuu':'9','Muu lehtipuu':'29'};
-  const today=new Date().toISOString().split('T')[0];
-  const header=['KuvioTunnus','KoealaNumero','PuuNumero','Puulaji','PuulajiKoodi','LapimittaluokkaD13','PituusH','RunkotilavuusV','PohjapintaAlaG','MittausPvm'];
-  const rows=[header];
-  const allF=[];
-  if(state.figure)allF.push({figure:state.figure,plots:state.plots});
-  savedFigures.forEach(f=>allF.push(f));
-  allF.forEach(({figure,plots})=>{
-    plots.forEach(p=>{
-      if(!p.trees.length)rows.push([figure.name,p.id,'','','','','','','',today]);
-      else p.trees.forEach(t=>{
-        const v=calcVolume(t.species,t.dbh,t.height);
-        const ba=calcBasalArea(t.dbh);
-        rows.push([figure.name,p.id,t.num,t.species,vmiCode[t.species]??'',t.dbh??'',t.height??'',v!==null?v.toFixed(1):'',ba!==null?ba.toFixed(6):'',today]);
-      });
-    });
-  });
-  dl('\uFEFF'+rows.map(r=>r.join(';')).join('\n'),'maastodata_kaikki.csv','text/csv;charset=utf-8;');
-  showToast('✅ Kaikki CSV ladattu!');
-}
-function exportJSON(){if(!state.figure){showToast('⚠️ Ei dataa');return;}dl(JSON.stringify(state,null,2),'maastodata.json','application/json');showToast('✅ JSON ladattu!');}
-function dl(content,filename,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=filename;a.click();}
-
-// ═══════════════════════
-// BOTTOM NAV SYNC
-// ═══════════════════════
-function syncBnav(name) {
-  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
-  const el = document.getElementById('bnav-' + name);
-  if (el) el.classList.add('active');
-}
-
-// ═══════════════════════
-// DRAWER (mobile plot picker)
-// ═══════════════════════
+// ── DRAWER ─────────────────────────────────────────────────────────────────
 function openDrawer() {
-  if (!state.figure || !state.plots.length) {
-    showToast('⚠️ Luo ensin kuvio asetuksista');
-    return;
-  }
-  renderDrawer();
-  document.getElementById('drawer-overlay').style.display = 'block';
-  document.getElementById('drawer').style.display = 'flex';
-  // Force reflow then animate
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      document.getElementById('drawer-overlay').classList.add('open');
-      document.getElementById('drawer').classList.add('open');
-    });
-  });
+  if (!S.figure) { showToast('⚠️ Luo ensin kuvio'); return; }
+  document.getElementById('drawer-body').innerHTML=S.plots.map((p,i)=>`
+    <div class="drawer-item ${i===plotIdx?'active':''}" onclick="showPlot(${i})">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="drawer-item-num">${p.id}</span>
+        <span style="font-size:13px;color:var(--text-mid);font-weight:500">Koeala ${p.id}</span>
+      </div>
+      <span style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted)">${p.trees.length} puuta</span>
+    </div>`).join('');
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
 }
 
 function closeDrawer() {
   document.getElementById('drawer-overlay').classList.remove('open');
   document.getElementById('drawer').classList.remove('open');
-  setTimeout(() => {
-    document.getElementById('drawer-overlay').style.display = 'none';
-    document.getElementById('drawer').style.display = 'none';
-  }, 300);
 }
 
-function renderDrawer() {
-  if (!state.figure) return;
-  document.getElementById('drawer-title').textContent = state.figure.name + ' — Koealat';
-  document.getElementById('drawer-body').innerHTML = state.plots.map((p, i) => `
-    <div class="drawer-plot-item ${i === activePlotIdx && document.getElementById('view-plot').classList.contains('active') ? 'active' : ''}"
-         onclick="showPlot(${i});closeDrawer()">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span class="drawer-plot-num">${p.id}</span>
-        <span class="drawer-plot-name">Koeala ${p.id}</span>
-      </div>
-      <span class="drawer-plot-count">${p.trees.length > 0 ? p.trees.length + ' puuta' : '–'}</span>
-    </div>`).join('');
-}
-let tt;
-function showToast(msg){clearTimeout(tt);const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');tt=setTimeout(()=>t.classList.remove('show'),3000);}
-
-document.addEventListener('keydown',e=>{
-  if (e.key==='Enter'&&document.getElementById('view-plot').classList.contains('active')&&activeTab==='input') {
-    if (['t-species','t-dbh','t-height'].includes(document.activeElement?.id)) addTree();
-  }
-  if (e.key==='Escape'){closeModal();cancelEdit();}
-});
-document.getElementById('finish-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
-
-
-// ═══════════════════════
-// RELASKOOPPI KOEALA
-// ═══════════════════════
-const SPECIES_LIST = ['Mänty','Kuusi','Rauduskoivu','Muu havupuu','Muu lehtipuu'];
-
-// Relaskooppidata per koeala: { baf, species: { 'Mänty': count, ... }, koepuut: [] }
-function getRelaPlot() {
-  const p = state.plots[activePlotIdx];
-  if (!p.rela) p.rela = { baf: 1, species: {}, koepuut: [] };
-  return p.rela;
+// ── TOAST ──────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  clearTimeout(toastTmr);
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  toastTmr=setTimeout(()=>el.classList.remove('show'),3200);
 }
 
-function renderRelaspeciesInputs() {
-  const rela = getRelaPlot();
-  // Sync BAF selector
-  const bafSel = document.getElementById('rela-baf');
-  if (bafSel) bafSel.value = rela.baf || 1;
-
-  const container = document.getElementById('rela-species-inputs');
-  if (!container) return;
-  container.innerHTML = SPECIES_LIST.map(sp => {
-    const val = rela.species[sp] || 0;
-    return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
-      <span style="min-width:130px;font-size:14px;font-weight:600;color:var(--text-mid)">${sp}</span>
-      <div style="display:flex;align-items:center;gap:6px">
-        <button onclick="adjustRela('${sp}',-1)" style="width:34px;height:34px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
-        <input type="number" id="rela-${sp.replace(/\s/g,'_')}" value="${val}" min="0" step="0.5"
-          style="width:70px;text-align:center;font-family:'Inconsolata',monospace;font-size:16px;font-weight:700;padding:6px"
-          onchange="saveRelaCount('${sp}',this.value)">
-        <button onclick="adjustRela('${sp}',1)" style="width:34px;height:34px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
-        <span style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--text-muted)">kpl (rajapuu=0.5)</span>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Show koepuu list
-  renderRelaKoepuuList();
-}
-
-function adjustRela(species, delta) {
-  const rela = getRelaPlot();
-  const key = 'rela-' + species.replace(/\s/g,'_');
-  const inp = document.getElementById(key);
-  if (!inp) return;
-  const cur = parseFloat(inp.value) || 0;
-  const next = Math.max(0, cur + delta);
-  inp.value = next;
-  saveRelaCount(species, next);
-}
-
-function saveRelaCount(species, val) {
-  const rela = getRelaPlot();
-  const n = parseFloat(val);
-  rela.species[species] = isNaN(n) ? 0 : Math.max(0, n);
-  persist();
-}
-
-function calcRelaskoop() {
-  const baf = parseFloat(document.getElementById('rela-baf').value) || 1;
-  const rela = getRelaPlot();
-  rela.baf = baf;
-  // Read current values from inputs
-  SPECIES_LIST.forEach(sp => {
-    const inp = document.getElementById('rela-' + sp.replace(/\s/g,'_'));
-    if (inp) rela.species[sp] = parseFloat(inp.value) || 0;
-  });
-  persist();
-
-  const results = SPECIES_LIST
-    .filter(sp => (rela.species[sp] || 0) > 0)
-    .map(sp => {
-      const count = rela.species[sp];
-      const ppaha = count * baf; // m²/ha per species
-      return { sp, count, ppaha };
-    });
-
-  const totalPpaha = results.reduce((s,r)=>s+r.ppaha, 0);
-
-  if (!results.length) {
-    document.getElementById('rela-results').style.display = 'none';
-    showToast('⚠️ Syötä ensin puiden lukumäärät');
-    return;
-  }
-
-  const rows = results.map(r =>
-    `<tr>
-      <td><span class="species-pill">${r.sp}</span></td>
-      <td class="tree-num">${r.count}</td>
-      <td class="val-cell" style="color:var(--green-mid);font-weight:700">${r.ppaha.toFixed(1)}</td>
-    </tr>`
-  ).join('');
-
-  document.getElementById('rela-results-content').innerHTML = `
-    <table style="margin-bottom:12px">
-      <thead><tr><th>Puulaji</th><th>Luettu (kpl)</th><th>PPA (m²/ha)</th></tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot><tr style="background:var(--green-pale2)">
-        <td><strong>Yhteensä</strong></td>
-        <td></td>
-        <td style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green)">${totalPpaha.toFixed(1)} m²/ha</td>
-      </tfoot>
-    </table>
-    <div style="font-size:12px;color:var(--text-dim);background:white;border:1px solid var(--border);border-radius:8px;padding:10px 14px">
-      <strong>Laskentaperiaate:</strong> PPA (m²/ha) = luettujen puiden kpl × BAF (${baf})<br>
-      Koeala-BAF ${baf}: jokainen hahlon täyttävä puu edustaa ${baf} m²/ha pohjapinta-alaa.
-    </div>`;
-
-  document.getElementById('rela-results').style.display = 'block';
-  renderRelaKoepuuList();
-}
-
-function resetRelaskoop() {
-  const rela = getRelaPlot();
-  rela.species = {};
-  rela.koepuut = [];
-  persist();
-  renderRelaspeciesInputs();
-  document.getElementById('rela-results').style.display = 'none';
-}
-
-function saveRelaKoepuu() {
-  const sp = document.getElementById('rela-kp-species').value;
-  const dbh = document.getElementById('rela-kp-dbh').value;
-  const h = document.getElementById('rela-kp-h').value;
-  if (!sp || !dbh) { showToast('⚠️ Anna puulaji ja d1.3'); return; }
-  const rela = getRelaPlot();
-  rela.koepuut.push({ sp, dbh: parseFloat(dbh), h: h ? parseFloat(h) : null });
-  persist();
-  document.getElementById('rela-kp-species').value = '';
-  document.getElementById('rela-kp-dbh').value = '';
-  document.getElementById('rela-kp-h').value = '';
-  renderRelaKoepuuList();
-}
-
-function renderRelaKoepuuList() {
-  const el = document.getElementById('rela-koepuu-list');
-  if (!el) return;
-  const rela = getRelaPlot();
-  if (!rela.koepuut || !rela.koepuut.length) { el.innerHTML = ''; return; }
-  el.innerHTML = `<table style="margin-top:6px"><thead><tr><th>Puulaji</th><th>d1.3</th><th>h</th><th></th></tr></thead>
-    <tbody>${rela.koepuut.map((kp,i)=>`<tr>
-      <td><span class="species-pill">${kp.sp}</span></td>
-      <td class="val-cell">${kp.dbh} cm</td>
-      <td class="val-cell">${kp.h ? kp.h+' m' : '—'}</td>
-      <td><button class="btn-danger" onclick="deleteRelaKoepuu(${i})">✕</button></td>
-    </tr>`).join('')}</tbody></table>`;
-}
-
-function deleteRelaKoepuu(idx) {
-  const rela = getRelaPlot();
-  rela.koepuut.splice(idx, 1);
-  persist();
-  renderRelaKoepuuList();
-}
-
-// ═══════════════════════
-// PDF EXPORT (print dialog)
-// ═══════════════════════
-function exportPDF() {
-  if (!state.figure) { showToast('⚠️ Ei aktiivista kuviota'); return; }
-  // Switch to summary view to show all data for print
-  const allFigures = [];
-  if (state.figure) allFigures.push({ figure: state.figure, plots: state.plots, isActive: true });
-  savedFigures.forEach(f => allFigures.push({ ...f, isActive: false }));
-
-  // Build a print-only report div
-  let existing = document.getElementById('print-report');
-  if (existing) existing.remove();
-
-  const report = document.createElement('div');
-  report.id = 'print-report';
-  report.className = 'print-only';
-  report.style.cssText = 'padding:20px;font-family:Lato,sans-serif;';
-
-  const figObj = allFigures[0]; // active figure
-  const fig = figObj.figure;
-  const allTrees = figObj.plots.flatMap(p=>p.trees.map(t=>({...t,plotId:p.id})));
-  const dbhs = allTrees.filter(t=>t.dbh).map(t=>parseFloat(t.dbh));
-  const heights = allTrees.filter(t=>t.height).map(t=>parseFloat(t.height));
-  const vols = allTrees.map(t=>calcVolume(t.species,t.dbh,t.height)).filter(v=>v!==null);
-  const bas = allTrees.map(t=>calcBasalArea(t.dbh)).filter(v=>v!==null);
-  const dg = calcDg(allTrees);
-  const avgH = heights.length ? (heights.reduce((a,b)=>a+b,0)/heights.length).toFixed(1) : '—';
-  const totalVol = vols.length ? vols.reduce((a,b)=>a+b,0).toFixed(1) : '—';
-  const totalBa = bas.length ? bas.reduce((a,b)=>a+b,0).toFixed(4) : '—';
-  const speciesSet = [...new Set(allTrees.map(t=>t.species))];
-
-  const plotRows = figObj.plots.map(p => {
-    const pDbhs = p.trees.filter(t=>t.dbh).map(t=>parseFloat(t.dbh));
-    const pHeights = p.trees.filter(t=>t.height).map(t=>parseFloat(t.height));
-    const pVols = p.trees.map(t=>calcVolume(t.species,t.dbh,t.height)).filter(v=>v!==null);
-    const pBas = pDbhs.reduce((s,d)=>{ const ba=calcBasalArea(d); return ba!==null?s+ba:s;}, 0);
-    const pDg = calcDg(p.trees);
-    const pAvgH = pHeights.length ? (pHeights.reduce((a,b)=>a+b,0)/pHeights.length).toFixed(1) : '—';
-    const pVol = pVols.length ? pVols.reduce((a,b)=>a+b,0).toFixed(1) : '—';
-    const factor = fig.plotFactor || '';
-    return `<tr>
-      <td style="font-weight:700">${p.id}</td>
-      <td>${p.trees.length}</td>
-      <td>${pDg !== null ? pDg.toFixed(1) : '—'}</td>
-      <td>${pAvgH}</td>
-      <td>${pBas.toFixed(4)}</td>
-      <td>${factor && pDbhs.length ? (pBas*factor).toFixed(2) : '—'}</td>
-      <td>${pVol}</td>
-    </tr>`;
-  }).join('');
-
-  const treeRows = allTrees.map(t => {
-    const v = calcVolume(t.species,t.dbh,t.height);
-    const ba = calcBasalArea(t.dbh);
-    return `<tr>
-      <td>${t.plotId}</td><td>${t.num}</td><td>${t.species}</td>
-      <td>${t.dbh??'—'}</td><td>${t.height??'—'}</td>
-      <td>${v!==null?v.toFixed(1):'—'}</td>
-      <td>${ba!==null?ba.toFixed(4):'—'}</td>
-    </tr>`;
-  }).join('');
-
-  const now = new Date().toLocaleDateString('fi-FI');
-  report.innerHTML = `
-    <h1 style="font-size:20pt;margin-bottom:4px">Maastomittausraportti</h1>
-    <p style="color:#666;margin-bottom:20px">Päivämäärä: ${now}</p>
-
-    <h2 style="font-size:14pt;border-bottom:2px solid #2e7d32;padding-bottom:4px;margin-bottom:12px">Kuvion perustiedot</h2>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:10pt">
-      <tr><td style="padding:4px 8px;width:200px;color:#666">Kuvion tunnus</td><td style="padding:4px 8px;font-weight:700">${fig.name}</td></tr>
-      <tr style="background:#f5f5f5"><td style="padding:4px 8px;color:#666">Pinta-ala</td><td style="padding:4px 8px">${fig.figArea ? fig.figArea+' ha' : '—'}</td></tr>
-      <tr><td style="padding:4px 8px;color:#666">Koealan muoto</td><td style="padding:4px 8px">${fig.plotShape ? plotShapeLabel(fig.plotShape)+' — '+plotSizeLabel(fig.plotShape,fig.plotSize) : '—'}</td></tr>
-      <tr style="background:#f5f5f5"><td style="padding:4px 8px;color:#666">Koealan pinta-ala</td><td style="padding:4px 8px">${fig.plotArea ? fig.plotArea.toFixed(2)+' m²' : '—'}</td></tr>
-      <tr><td style="padding:4px 8px;color:#666">Koealakerroin</td><td style="padding:4px 8px">${fig.plotFactor ?? '—'}</td></tr>
-      <tr style="background:#f5f5f5"><td style="padding:4px 8px;color:#666">Koealoja</td><td style="padding:4px 8px">${figObj.plots.length} kpl</td></tr>
-    </table>
-
-    <h2 style="font-size:14pt;border-bottom:2px solid #2e7d32;padding-bottom:4px;margin-bottom:12px">Kuvion puustotunnukset</h2>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:10pt">
-      <tr><td style="padding:4px 8px;width:200px;color:#666">Runkoluku</td><td style="padding:4px 8px;font-weight:700">${allTrees.length} kpl</td></tr>
-      <tr style="background:#f5f5f5"><td style="padding:4px 8px;color:#666">Dg (PPA-painotettu)</td><td style="padding:4px 8px">${dg!==null?dg.toFixed(1)+' cm':'—'}</td></tr>
-      <tr><td style="padding:4px 8px;color:#666">Keskipituus</td><td style="padding:4px 8px">${avgH} m</td></tr>
-      <tr style="background:#f5f5f5"><td style="padding:4px 8px;color:#666">Pohjapinta-ala (koeala)</td><td style="padding:4px 8px">${totalBa} m²</td></tr>
-      <tr><td style="padding:4px 8px;color:#666">Kokonaistilavuus</td><td style="padding:4px 8px">${totalVol} dm³</td></tr>
-      <tr style="background:#f5f5f5"><td style="padding:4px 8px;color:#666">Puulajit</td><td style="padding:4px 8px">${speciesSet.join(', ')}</td></tr>
-    </table>
-
-    <h2 style="font-size:14pt;border-bottom:2px solid #2e7d32;padding-bottom:4px;margin-bottom:12px">Koealakohtaiset tulokset</h2>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:9pt">
-      <thead><tr style="background:#2e7d32;color:white">
-        <th style="padding:6px 8px;text-align:left">Koeala</th>
-        <th style="padding:6px 8px;text-align:right">Puita</th>
-        <th style="padding:6px 8px;text-align:right">Dg (cm)</th>
-        <th style="padding:6px 8px;text-align:right">Hkeski (m)</th>
-        <th style="padding:6px 8px;text-align:right">PPA (m²)</th>
-        <th style="padding:6px 8px;text-align:right">PPA (m²/ha)</th>
-        <th style="padding:6px 8px;text-align:right">V (dm³)</th>
-      </tr></thead>
-      <tbody>${plotRows}</tbody>
-    </table>
-
-    <h2 style="font-size:14pt;border-bottom:2px solid #2e7d32;padding-bottom:4px;margin-bottom:12px">Puuluettelo</h2>
-    <table style="width:100%;border-collapse:collapse;font-size:8pt">
-      <thead><tr style="background:#2e7d32;color:white">
-        <th style="padding:5px 6px;text-align:left">Koeala</th>
-        <th style="padding:5px 6px;text-align:left">Puu</th>
-        <th style="padding:5px 6px;text-align:left">Puulaji</th>
-        <th style="padding:5px 6px;text-align:right">d1.3 (cm)</th>
-        <th style="padding:5px 6px;text-align:right">h (m)</th>
-        <th style="padding:5px 6px;text-align:right">V (dm³)</th>
-        <th style="padding:5px 6px;text-align:right">PPA (m²)</th>
-      </tr></thead>
-      <tbody>${treeRows}</tbody>
-    </table>
-    <p style="margin-top:20px;font-size:8pt;color:#999">Raportti luotu MaastoData-sovelluksella · ${now}</p>`;
-
-  // Capture map and open print window
-  showToast('📄 Valmistellaan karttaa...');
-  captureMapForPDF(report.innerHTML, now, fig.name);
-}
-
-async function captureMapForPDF(reportHtml, now, figName) {
-  let mapImgHtml = '';
-
-  // Try to capture the summary map if it exists and has tiles loaded
-  try {
-    // Ensure summary map is initialized and showing current figure
-    await new Promise(resolve => {
-      if (!summaryMap) {
-        showView('summary', document.getElementById('nb-summary'));
-        setTimeout(resolve, 800);
-      } else {
-        resolve();
-      }
-    });
-
-    // Render the map container with html2canvas
-    const mapEl = document.getElementById('summary-map');
-    if (mapEl && typeof html2canvas !== 'undefined') {
-      summaryMap.invalidateSize();
-      highlightSummaryMap();
-      // Wait for tiles
-      await new Promise(r => setTimeout(r, 1200));
-      const canvas = await html2canvas(mapEl, {
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        scale: 1.5
-      });
-      mapImgHtml = `<img src="${canvas.toDataURL('image/png')}" 
-        style="width:100%;max-width:600px;border:1px solid #ccc;border-radius:4px;display:block;margin:0 auto">`;
-    }
-  } catch(e) {
-    console.log('Map capture skipped:', e);
-    mapImgHtml = '<div style="padding:20px;text-align:center;background:#f5f5f5;border:1px solid #ddd;border-radius:4px;color:#999;font-size:11pt">Karttakuva ei saatavilla (GPS-sijainteja ei tallennettu)</div>';
-  }
-
-  // Build final HTML for print window
-  const mapSection = `
-    <h2 style="font-size:14pt;border-bottom:2px solid #2e7d32;padding-bottom:4px;margin-bottom:12px">Karttaote — kuvion ja koealojen sijainnit</h2>
-    <div style="margin-bottom:20px">${mapImgHtml}</div>`;
-
-  const printContent = `<!DOCTYPE html><html lang="fi"><head>
-    <meta charset="UTF-8">
-    <title>MaastoData — ${figName} — ${now}</title>
-    <style>
-      body{font-family:Arial,sans-serif;font-size:11pt;color:#222;margin:20px 28px;}
-      h1{font-size:20pt;margin-bottom:4px;}
-      h2{font-size:13pt;border-bottom:2px solid #2e7d32;padding-bottom:4px;margin:20px 0 10px;}
-      table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:10pt;}
-      th{background:#2e7d32;color:white;padding:6px 8px;text-align:left;}
-      td{padding:5px 8px;border-bottom:1px solid #eee;}
-      tr:nth-child(even) td{background:#f9f9f9;}
-      .meta-table td:first-child{color:#666;width:200px;}
-      .badge{display:inline-block;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;
-             border-radius:4px;padding:1px 7px;font-size:9pt;}
-      @page{size:A4;margin:15mm 15mm 15mm 15mm;}
-      @media print{body{margin:0;}}
-    </style>
-  </head><body>
-    ${mapSection}
-    ${reportHtml}
-  </body></html>`;
-
-  const w = window.open('', '_blank');
-  if (w) {
-    w.document.write(printContent);
-    w.document.close();
-    w.onload = () => { w.focus(); w.print(); };
-  } else {
-    showToast('⚠️ Salli ponnahdusikkunat selaimessa');
-  }
-  showToast('✅ PDF-raportti valmis!');
-}
-
-// INIT
-renderSidebar(); updateTopbar(); showSetupCurrent(); setTimeout(initSetupMap,200);
-
-// Live preview for plot area
-const plotSizeEl = document.getElementById('fig-plot-size');
-if (plotSizeEl) plotSizeEl.addEventListener('input', updatePlotAreaPreview);
-
-// ═══════════════════════
-// PWA — Service Worker & Install
-// ═══════════════════════
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(reg => console.log('SW rekisteröity:', reg.scope))
-      .catch(err => console.log('SW epäonnistui:', err));
-  });
-}
-
-// Asennusbanneri
-let deferredPrompt = null;
-const installBanner = document.getElementById('install-banner');
-const installBtn = document.getElementById('install-btn');
-const installDismiss = document.getElementById('install-dismiss');
-
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  if (installBanner) installBanner.style.display = 'flex';
+// ── EVENTS ─────────────────────────────────────────────────────────────────
+document.getElementById('plot-coords').addEventListener('change', () => {
+  const raw=document.getElementById('plot-coords').value;
+  const p=raw.split(',').map(s=>parseFloat(s.trim()));
+  if(p.length===2&&!isNaN(p[0])){ S.plots[plotIdx].lat=p[0]; S.plots[plotIdx].lon=p[1]; persist(); }
 });
 
-if (installBtn) {
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') showToast('✅ MaastoData asennettu!');
-    deferredPrompt = null;
-    installBanner.style.display = 'none';
-  });
-}
-if (installDismiss) {
-  installDismiss.addEventListener('click', () => { installBanner.style.display = 'none'; });
-}
-window.addEventListener('appinstalled', () => {
-  showToast('🌲 MaastoData asennettu onnistuneesti!');
-  if (installBanner) installBanner.style.display = 'none';
+document.addEventListener('keydown', e => {
+  if (e.key==='Enter' && document.getElementById('view-plot').classList.contains('active') && activeTab==='input') {
+    if (document.activeElement?.id==='t-height') addTree();
+  }
+  if (e.key==='Escape') { closeModal(); cancelEdit(); }
 });
+
+document.getElementById('finish-modal').addEventListener('click', e => {
+  if(e.target===document.getElementById('finish-modal')) closeModal();
+});
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+renderSidebar();
+updateTopbar();
+renderActiveFig();
+setTimeout(initSetupMap, 200);
+</script>
+
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
