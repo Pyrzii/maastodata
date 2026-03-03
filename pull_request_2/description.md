@@ -1,0 +1,1 @@
+This pull request adds support for Progressive Web App (PWA) offline installation using SVG tree icons.
