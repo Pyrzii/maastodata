@@ -5,6 +5,8 @@ const CACHE_NAME = 'maastodata-v1';
 const URLS_TO_CACHE = [
   '/index.html',
   '/manifest.json',
+  '/icon-192.svg',
+  '/icon-512.svg',
   'https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inconsolata:wght@400;500;600&family=Lato:wght@300;400;500;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
