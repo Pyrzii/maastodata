@@ -36,6 +36,8 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4;}
 .topbar-info{flex:1;display:flex;gap:14px;font-size:12px;color:rgba(255,255,255,.85);font-family:'Inconsolata',monospace;overflow:hidden;}
 .topbar-info span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .topbar-menu-btn{display:none;background:rgba(255,255,255,.15);border:none;color:white;border-radius:var(--rs);padding:7px 10px;cursor:pointer;font-size:18px;flex-shrink:0;}
+.topbar-install-btn{background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.6);color:white;border-radius:var(--rs);padding:6px 12px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0;white-space:nowrap;transition:background .15s;}
+.topbar-install-btn:hover{background:rgba(255,255,255,.35);}
 
 /* LAYOUT */
 .app{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 52px);}
@@ -292,6 +294,7 @@ tbody tr:hover td{background:var(--green-pale);}
     <span id="tb-figure">Ei kuviota</span>
     <span id="tb-trees" style="display:none"></span>
   </div>
+  <button id="install-btn" class="topbar-install-btn" style="display:none" onclick="installPWA()">⬇ Asenna</button>
   <button class="topbar-menu-btn" onclick="openDrawer()">☰</button>
 </header>
 
@@ -1432,6 +1435,31 @@ document.addEventListener('keydown', e => {
 document.getElementById('finish-modal').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
 
 // ─── PWA ─────────────────────────────────
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'block';
+});
+
+function installPWA() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(() => {
+    deferredInstallPrompt = null;
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.style.display = 'none';
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'none';
+});
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 }
