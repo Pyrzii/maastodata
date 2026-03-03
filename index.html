@@ -302,6 +302,7 @@ tbody tr:hover td{background:var(--green-pale);}
     <button class="nav-btn"        id="nb-summary" onclick="showView('summary')"><span class="icon">🗺️</span>Kartta &amp; yhteenveto</button>
     <button class="nav-btn"        id="nb-saved"   onclick="showView('saved')"><span class="icon">💾</span>Tallennetut kuviot</button>
     <button class="nav-btn"        id="nb-relaskoop" onclick="showView('relaskoop')"><span class="icon">⭕</span>Relaskooppikoeala</button>
+    <button class="nav-btn" id="nb-install" onclick="installPWA()" style="display:none;margin-top:auto;background:var(--green);color:white;font-weight:700"><span class="icon">📲</span>Asenna sovellus</button>
     <div id="plot-sidebar-section" style="display:none">
       <div class="sidebar-label" style="margin-top:12px">Koealat</div>
       <div class="plot-list" id="plot-list"></div>
@@ -613,6 +614,7 @@ tbody tr:hover td{background:var(--green-pale);}
     <button class="bnav-btn"        id="bnav-summary" onclick="showView('summary')"><span class="bicon">🗺️</span>Kartta</button>
     <button class="bnav-btn"        id="bnav-saved"   onclick="showView('saved')"><span class="bicon">💾</span>Tallennetut</button>
     <button class="bnav-btn"        id="bnav-relaskoop" onclick="showView('relaskoop')"><span class="bicon">⭕</span>Relaskooppi</button>
+    <button class="bnav-btn" id="bnav-install" onclick="installPWA()" style="display:none;color:var(--green);font-weight:700"><span class="bicon">📲</span>Asenna</button>
   </div>
 </nav>
 
@@ -1431,9 +1433,47 @@ document.addEventListener('keydown', e => {
 });
 document.getElementById('finish-modal').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
 
-// ─── PWA ─────────────────────────────────
+// ─── PWA + ASENNA-PAINIKE ────────────────
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  ['nb-install','bnav-install'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+});
+
+window.addEventListener('appinstalled', function() {
+  deferredInstallPrompt = null;
+  ['nb-install','bnav-install'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  showToast('✅ Sovellus asennettu!');
+});
+
+function installPWA() {
+  if (!deferredInstallPrompt) {
+    showToast('ℹ️ Sovellus on jo asennettu tai selain ei tue asennusta');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(function(result) {
+    if (result.outcome === 'accepted') showToast('✅ Asennetaan...');
+    deferredInstallPrompt = null;
+    ['nb-install','bnav-install'].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  });
+}
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
 }
 
 
